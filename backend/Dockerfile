@@ -1,20 +1,17 @@
-# Use Node.js v23.3.0 image
+# backend/Dockerfile
 FROM node:23.3.0-alpine
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and yarn.lock (if exists) files to the container
+# Copy package.json and yarn.lock first to leverage Docker cache
 COPY package.json yarn.lock ./
 
-# Install dependencies using yarn
+# Install dependencies
 RUN yarn install
 
-# Copy the rest of the app files to the container
+# Copy the rest of the application
 COPY . .
 
-# Expose the backend server port (default for Express is 5000)
+# Expose port and start backend app
 EXPOSE 8000
-
-# Command to run the backend app in development mode using nodemon
 CMD ["yarn", "dev"]
