@@ -1,0 +1,56 @@
+# Node.js
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Build files
+build/
+dist/
+out/
+
+# Coverage reports
+coverage/
+
+# Environment files
+.env
+.env.*
+
+# Temporary files
+tmp/
+temp/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Static assets and compiled files
+public/static/
+*.svg
+*.png
+*.jpg
+
+# MongoDB-related
+*.mongodb
+dump/
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Tests and snapshots
+*.snap
+
+# Docker-related
+.dockerignore
+.docker/
+
+# Ignore lint and cache files
+*.eslintcache
+*.cache
+
+# Misc
+yarn.lock
+package-lock.json

@@ -1,0 +1,96 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+
+# Environment variable files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+
+# Build and output directories
+/dist/
+/build/
+/out/
+
+# Cache and temporary files
+.cache/
+*.cache
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+*.~lock.*
+ehthumbs.db
+
+# Frontend specific files
+frontend/node_modules/
+frontend/.next/
+frontend/.cache/
+frontend/public/static/
+frontend/dist/
+
+# Backend specific files
+backend/node_modules/
+
+# Coverage reports
+coverage/
+*.lcov
+coverage-final.json
+.nyc_output/
+
+# Test files
+/junit.xml
+/mochawesome.json
+jest-test-results.json
+
+# Docker-related
+docker-compose.override.yml
+*.env.docker
+docker-sync.yml
+.docker/
+
+# Build artifacts
+*.js.map
+*.css.map
+
+# Miscellaneous
+*.lock
+*.log
+yarn.lock
+package-lock.json
+.pnpm-debug.log
+
+# Ignore local private files
+*.local
+
+# Ignore React-specific build files
+*.eslintcache
+
+# Ignore static assets for production
+frontend/static/
+
+# MongoDB-related
+*.mongodb
+dump/
+
+# Ignore Git files
+.git/
