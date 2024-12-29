@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173" # Exposes frontend on port 5173
+    networks:
+      - hospital-net
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://backend:8000 # Assuming you're using this variable in your frontend
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000" # Exposes backend on port 8000
+    networks:
+      - hospital-net
+    environment:
+      - NODE_ENV=development
+      - PORT=8000
+      - DB_URI=your-mongodb-uri-here
+    volumes:
+      - ./backend:/app # Mounts the backend code to enable live changes (for dev)
+      - ./backend/node_modules # Prevents node_modules from being overwritten
+
+networks:
+  hospital-net:
+    driver: bridge
