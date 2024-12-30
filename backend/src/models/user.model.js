@@ -41,13 +41,12 @@ const userSchema = Schema(
     },
     role: {
       type: String,
-      enum: ["doctor", "patient"],
+      enum: ["doctor", "patient", "scanCenter"],
       required: true,
     },
   },
   {
     timestamps: true,
-    discriminatorKey: "role",
   }
 );
 
@@ -89,16 +88,3 @@ userSchema.methods.generateRefreshToken = async function () {
 };
 
 export const User = mongoose.model("User", userSchema);
-
-export const Doctor = User.discriminator(
-  "Doctor",
-  new mongoose.Schema({
-    hospital: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Hospital",
-      required: true,
-    },
-  })
-);
-
-export const Patient = User.discriminator("Patient", new mongoose.Schema({}));
