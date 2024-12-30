@@ -35,20 +35,30 @@ const userSchema = Schema(
     refreshToken: {
       type: String,
     },
+    address: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ["doctor", "patient"],
+      required: true,
+    },
   },
   {
     timestamps: true,
+    discriminatorKey: "role",
   }
 );
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10); // bcryptjs hash method is used here
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
 userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(password, this.password); // bcryptjs compare method is used here
+  return await bcrypt.compare(password, this.password);
 };
 
 userSchema.methods.generateAccessToken = async function () {
@@ -79,3 +89,16 @@ userSchema.methods.generateRefreshToken = async function () {
 };
 
 export const User = mongoose.model("User", userSchema);
+
+export const Doctor = User.discriminator(
+  "Doctor",
+  new mongoose.Schema({
+    hospital: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Hospital",
+      required: true,
+    },
+  })
+);
+
+export const Patient = User.discriminator("Patient", new mongoose.Schema({}));

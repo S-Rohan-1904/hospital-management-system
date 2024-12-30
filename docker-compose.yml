@@ -3,7 +3,7 @@ services:
     build:
       context: ./frontend
     ports:
-      - "5173:5173" # Exposes frontend on port 5173
+      - "5173:5173"
     networks:
       - hospital-net
     depends_on:
@@ -22,7 +22,6 @@ services:
       - ./backend/.env
     environment:
       - NODE_ENV=development
-
     volumes:
       - ./backend:/app
       - /app/node_modules
