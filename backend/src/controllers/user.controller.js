@@ -24,10 +24,10 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, password, fullName } = req.body;
+  const { username, email, password, fullName, role, address } = req.body;
 
   if (
-    [username, email, password, fullName].some(
+    [username, email, password, fullName, role, address].some(
       (field) => !field || field.trim() == ""
     )
   ) {
@@ -58,6 +58,8 @@ const registerUser = asyncHandler(async (req, res) => {
     fullName: fullName.trim(),
     avatar: avatar.url,
     password,
+    role,
+    address,
   });
 
   const createdUser = await User.findById(user._id).select(
