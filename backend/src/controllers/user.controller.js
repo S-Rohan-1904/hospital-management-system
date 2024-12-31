@@ -24,10 +24,19 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, password, fullName } = req.body;
+  const {
+    username,
+    email,
+    password,
+    fullName,
+    role,
+    address,
+    gender,
+    specialization,
+  } = req.body;
 
   if (
-    [username, email, password, fullName].some(
+    [username, email, password, fullName, role, address, gender].some(
       (field) => !field || field.trim() == ""
     )
   ) {
@@ -52,13 +61,26 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Failed to upload avatar");
   }
 
-  const user = await User.create({
+  if (role === "doctor" && !specialization) {
+    throw new ApiError(400, "Specialization is required for doctors");
+  }
+
+  const userData = {
     username: username.toLowerCase(),
     email: email.toLowerCase(),
     fullName: fullName.trim(),
     avatar: avatar.url,
     password,
-  });
+    role,
+    address,
+    gender,
+  };
+
+  if (role === "doctor" && specialization) {
+    userData.specialization = specialization;
+  }
+
+  const user = await User.create(userData);
 
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -213,18 +235,29 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { fullName, email } = req.body;
-  if (!fullName || !email) {
-    throw new ApiError(400, "All fields are required");
+  const { fullName, email, gender, address, specialization } = req.body;
+  if (!fullName && !email && !gender && !address) {
+    throw new ApiError(400, "Atleast one field is required");
+  }
+
+  const updateQuery = {};
+
+  const fieldsToUpdate = [email, fullName, gender, address];
+
+  for (const [key, value] of Object.entries(fieldsToUpdate)) {
+    if (value) {
+      updateQuery[key] = value;
+    }
+  }
+
+  if (user.role === "doctor" && updateData.specialization) {
+    updateQuery.specialization = specialization;
   }
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
-      $set: {
-        fullName,
-        email,
-      },
+      $set: updateQuery,
     },
     { new: true }
   ).select("-password");

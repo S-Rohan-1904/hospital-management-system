@@ -10,7 +10,7 @@ const hospitalSchema = new Schema({
   },
   doctors: [
     {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
     },
   ],

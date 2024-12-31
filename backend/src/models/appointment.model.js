@@ -1,15 +1,22 @@
 import mongoose, { Schema } from "mongoose";
 
 const appointmentSchema = new Schema({
-  patient: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  doctor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  hospital: { type: mongoose.Schema.Types.ObjectId, ref: "Hospital" },
-  date: Date,
-  slot: String,
+  patient: { type: Schema.Types.ObjectId, ref: "User" },
+  doctor: { type: Schema.Types.ObjectId, ref: "User" },
+  hospital: { type: Schema.Types.ObjectId, ref: "Hospital" },
+  startTime: {
+    type: Date,
+    required: true,
+  },
+  endTime: {
+    type: Date,
+    required: true,
+  },
   status: {
     type: String,
-    enum: ["scheduled", "rescheduled", "cancelled", "pending"],
+    enum: ["scheduled", "rescheduled", "rejected", "pending"],
   },
+  description: String,
 });
 
 export const Appointment = mongoose.model("Appointment", appointmentSchema);

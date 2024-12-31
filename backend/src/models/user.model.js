@@ -41,12 +41,29 @@ const userSchema = Schema(
     },
     role: {
       type: String,
-      enum: ["doctor", "patient", "scanCenter"],
+      enum: ["doctor", "patient", "scanCentre"],
       required: true,
     },
     googleId: {
       type: String,
       allowNull: true,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      required: true,
+    },
+    specialization: {
+      type: String,
+      validate: {
+        validator: function (value) {
+          if (this.role === "doctor" && !value) {
+            return false;
+          }
+          return true;
+        },
+        message: "Specialization is required for doctors",
+      },
     },
   },
   {
