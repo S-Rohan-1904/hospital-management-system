@@ -1,18 +1,19 @@
 import { Router } from "express";
 import {
   requestAppointment,
-  approveAppointment,
-  rejectAppointment,
+  approveOrRejectAppointment,
   rescheduleAppointment,
-  getAppointments,
-} from "../controllers/appointment.controller";
-import { verifyJWT } from "../middlewares/auth.middleware";
+  getAppointmentsById,
+  updateDescriptionOfAppointment,
+} from "../controllers/appointment.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router();
 
-router.route("/").get(verifyJWT, getAppointments);
+router.route("/").get(verifyJWT, getAppointmentsById);
 router.route("/").post(verifyJWT, requestAppointment);
-router.route("/:id/approve").patch(verifyJWT, approveAppointment);
-router.route("/:id/reject").patch(verifyJWT, rejectAppointment);
+// doctor can add the description of the outcome of the appointment here
+router.route("/:id").patch(verifyJWT, updateDescriptionOfAppointment);
+router.route("/:id/:status").patch(verifyJWT, approveOrRejectAppointment);
 router.route("/:id/reschedule").patch(verifyJWT, rescheduleAppointment);
 
 export default router;

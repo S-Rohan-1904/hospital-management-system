@@ -1,14 +1,16 @@
 import mongoose, { Schema } from "mongoose";
 
 const medicalHistorySchema = new Schema({
-  patient: { type: Schema.Types.ObjectId, ref: "User" },
+  patient: { type: Schema.Types.ObjectId, ref: "User", required: true },
   doctor: {
     type: Schema.Types.ObjectId,
     ref: "User",
+    required: true,
   },
   hospital: {
     type: Schema.Types.ObjectId,
     ref: "Hospital",
+    required: true,
   },
   date: { type: Date, required: true },
   slot: { type: String, required: true },
