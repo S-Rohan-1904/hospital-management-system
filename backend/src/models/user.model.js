@@ -44,6 +44,10 @@ const userSchema = Schema(
       enum: ["doctor", "patient", "scanCenter"],
       required: true,
     },
+    googleId: {
+      type: String,
+      allowNull: true,
+    },
   },
   {
     timestamps: true,
