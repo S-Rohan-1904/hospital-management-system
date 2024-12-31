@@ -12,9 +12,9 @@ const medicalHistorySchema = new Schema({
     ref: "Hospital",
     required: true,
   },
-  startTime: { type: Date, required: true },
-  endTime: { type: String, required: true },
-  scanDocument: { type: String },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true },
+  scanDocuments: [{ type: String }],
   diagnosis: { type: String, required: true },
   description: { type: String, required: true },
 });

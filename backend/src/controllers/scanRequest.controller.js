@@ -233,7 +233,7 @@ const completeScanRequest = asyncHandler(async (req, res) => {
 
   scanRequest.status = "completed";
   scanRequest.scanDocument = scanDocument.url;
-  scanRequest.date = Date.now();
+  scanRequest.dateOfUpload = Date.now();
   await scanRequest.save({ validateBeforeSave: false });
 
   return res

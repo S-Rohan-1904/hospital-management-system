@@ -18,7 +18,7 @@ const scanRequestSchema = new Schema({
     ref: "Hospital",
     required: true,
   },
-  date: { type: Date }, // when the scan is uploaded/updated
+  dateOfUpload: { type: Date }, // when the scan is uploaded/updated
   appointment: { type: Schema.Types.ObjectId, ref: "Appointment" },
   status: {
     type: String,
