@@ -17,6 +17,9 @@ app.use(
 //routes
 
 import userRouter from "./routes/user.routes.js";
+import appointmentRouter from "./routes/appointment.routes.js";
+
 app.use("/api/v1/users/", userRouter);
+app.use("/api/v1/appointments/", appointmentRouter);
 
 export default app;
