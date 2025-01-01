@@ -23,10 +23,11 @@ async function getAccessToken() {
 
     return { accessToken };
   } catch (error) {
-    console.error(
-      "Error fetching access token:",
-      error.response?.data || error.message
-    );
+      throw new ApiError(
+        500,
+        "Error fetching access token",
+        error.message
+    )
   }
 }
 
@@ -36,7 +37,7 @@ const getNearbyHospital = asyncHandler(async (req, res) => {
 
     if (!accessToken) {
       throw new ApiError(
-        500,
+        404,
         "Something went wrong while fetching nearby hospitals."
       );
     }
@@ -63,7 +64,11 @@ const getNearbyHospital = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, NearbyHospitals.suggestedLocations));
+      .json(new ApiResponse(
+        200,
+        NearbyHospitals.suggestedLocations,
+        "Nearby Hospitals successfully fetched."
+      ));
   } catch (error) {
     throw new ApiError(500, error.message || "An error occured");
   }
