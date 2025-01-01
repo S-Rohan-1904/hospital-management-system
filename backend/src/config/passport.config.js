@@ -7,22 +7,27 @@ passport.use(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,  // Client ID
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,  // Client secret
-        callbackURL: "http://localhost:8000/auth/google/callback",
+        callbackURL: "http://localhost:8000/api/v1/auth/google/callback",
       },
       async function (token, tokenSecret, profile, done) {
         try {
-          console.log(profile);
-          const [user, created] = await User.findOrCreate({
-            where: {
-              googleId: profile.id,
+          const user = await User.findOneAndUpdate(
+            { googleId: profile.id }, 
+            {
+              $setOnInsert: { 
+                username: profile.displayName,
+                fullName: profile.displayName,
+                email: profile.emails[0].value,
+                avatar: profile._json.picture,
+                role: "patient"
+              },
             },
-            defaults: {
-              first: profile.name.givenName,
-              last: profile.name.familyName,
-              email: profile.emails[0].value,
-            },
-          });
-          return done(null, traveler);
+            {
+              upsert: true, 
+              new: true,    
+            }
+          );
+          return done(null, user);
         } catch (err) {
           return done(err, null);
         }
@@ -34,8 +39,8 @@ passport.serializeUser(function (user, done) {
     done(null, user.id);
   });
   
-passport.deserializeUser(function (id, done) {
-    User.findById(id, function (err, user) {
+passport.deserializeUser(async function (id, done) {
+    await User.findById(id, function (err, user) {
       done(err, user);
     });
   });

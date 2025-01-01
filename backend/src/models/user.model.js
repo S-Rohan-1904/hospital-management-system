@@ -30,14 +30,12 @@ const userSchema = Schema(
     },
     password: {
       type: String,
-      required: true,
     },
     refreshToken: {
       type: String,
     },
     address: {
       type: String,
-      required: true,
     },
     role: {
       type: String,
@@ -51,7 +49,6 @@ const userSchema = Schema(
     gender: {
       type: String,
       enum: ["male", "female", "other"],
-      required: true,
     },
     specialization: {
       type: String,
