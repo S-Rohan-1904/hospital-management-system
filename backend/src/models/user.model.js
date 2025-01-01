@@ -44,6 +44,10 @@ const userSchema = Schema(
       enum: ["doctor", "patient", "scanCentre"],
       required: true,
     },
+    googleId: {
+      type: String,
+      allowNull: true,
+    },
     gender: {
       type: String,
       enum: ["male", "female", "other"],

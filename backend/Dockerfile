@@ -4,10 +4,12 @@ FROM node:23.3.0-alpine
 WORKDIR /app
 
 # Copy package.json and yarn.lock first to leverage Docker cache
-COPY package.json yarn.lock ./
+COPY package.json ./
 
 # Install dependencies
 RUN yarn install
+
+COPY yarn.lock ./
 
 # Copy the rest of the application
 COPY . .
