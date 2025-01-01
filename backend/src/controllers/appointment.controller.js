@@ -71,7 +71,7 @@ const approveOrRejectAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Appointment id and status are required");
   }
 
-  if (status !== "approved" || status !== "rejected") {
+  if (!(status === "scheduled" || status === "rejected")) {
     throw new ApiError(400, "Status can only be approved or rejected");
   }
 
@@ -81,7 +81,7 @@ const approveOrRejectAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Appointment not found");
   }
 
-  if (appointment.doctor !== req.user._id) {
+  if (!appointment.doctor.equals(req.user._id)) {
     throw new ApiError(403, "Forbidden request");
   }
 
@@ -89,12 +89,19 @@ const approveOrRejectAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(409, `Appointment already ${appointment.status}`);
   }
 
-  appointment.status = status;
-  await appointment.save({ validateBeforeSave: false });
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, appointment, `Appointment ${status}`));
+  if (await isDoctorFree(appointment.doctor,appointment.startTime,appointment.endTime)) {
+    appointment.status = status;
+    await appointment.save({ validateBeforeSave: false });
+  
+    return res
+      .status(200)
+      .json(new ApiResponse(200, appointment, `Appointment ${status}`));   
+  } else {
+    throw new ApiError(
+      409,
+      "Doctor is not free at this time"
+    )
+  }
 });
 
 const rescheduleAppointment = asyncHandler(async (req, res) => {
@@ -119,7 +126,7 @@ const rescheduleAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Appointment not found");
   }
 
-  if (appointment.doctor !== req.user._id) {
+  if (!appointment.doctor.equals(req.user._id)) {
     throw new ApiError(403, "Forbidden request");
   }
 
@@ -127,7 +134,7 @@ const rescheduleAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Appointment has to be scheduled first");
   }
 
-  if (isDoctorFree(req.user._id, startTime, endTime)) {
+  if (!isDoctorFree(req.user._id, startTime, endTime)) {
     throw new ApiError(409, "Doctor is not free at this time");
   }
   appointment.status = "rescheduled";
@@ -242,11 +249,13 @@ const updateDescriptionOfAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Forbidden request");
   }
 
-  if (description) updateFields.description = description;
-
   const updatedAppointment = await Appointment.findByIdAndUpdate(
     appointmentId,
-    { $set: description },
+    { 
+      $set: {
+        description
+      }
+    },
     { new: true, runValidators: true }
   );
 
