@@ -6,6 +6,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 const isDoctorFree = async (doctorId, startTime, endTime) => {
   const overlappingAppointments = await Appointment.find({
     doctor: doctorId,
+    status: { $in: ["scheduled", "rescheduled"]},
     $or: [
       { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
       { startTime: { $lt: startTime }, endTime: { $gt: startTime } },
@@ -32,7 +33,10 @@ const requestAppointment = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(400, "All fields are required");
   }
-  if (isDoctorFree(doctorId, startTime, endTime)) {
+
+  const isDoctorFreeBoolean = await isDoctorFree(doctorId, startTime, endTime);
+  
+  if (!isDoctorFreeBoolean) {
     throw new ApiError(409, "Doctor is not free at this time");
   }
 
@@ -147,7 +151,7 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
   const { _id, role } = req.user;
   const userId = _id;
 
-  if (role !== "patient" || role !== "doctor") {
+  if (role !== "patient" && role !== "doctor") {
     throw new ApiError(403, "Forbidden request");
   }
 
