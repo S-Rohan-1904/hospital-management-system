@@ -17,6 +17,9 @@ const medicalHistorySchema = new Schema({
   scanDocuments: [{ type: String }],
   diagnosis: { type: String, required: true },
   description: { type: String, required: true },
+},
+{
+  timestamps: true
 });
 
 export const MedicalHistory = mongoose.model(

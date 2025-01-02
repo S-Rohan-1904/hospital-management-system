@@ -26,6 +26,9 @@ const scanRequestSchema = new Schema({
     default: "pending",
   },
   scanDocument: String,
+},
+{
+  timestamps: true
 });
 
 export const ScanRequest = mongoose.model(

@@ -222,11 +222,11 @@ const completeScanRequest = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Scan request not found");
   }
 
-  if (scanRequest.doctor.equals(req.user._id)) {
+  if (!scanRequest.scanCentre.equals(req.user._id)) {
     throw new ApiError(403, "Forbidden request");
   }
 
-  if (scanRequest.status !== "pending") {
+  if (scanRequest.status !== "accepted") {
     throw new ApiError(409, `Scan request already ${scanRequest.status}`);
   }
 
@@ -257,8 +257,8 @@ const completeScanRequest = asyncHandler(async (req, res) => {
 const updateScanRequest = asyncHandler(async (req, res) => {
   const { role } = req.user;
   const { description } = req.body;
-  const scanRequestId = req.params?.id
-
+  const scanRequestId = req.params?.id;
+  
   const scanRequest = await ScanRequest.findById(scanRequestId);
 
   if (!scanRequest) {
