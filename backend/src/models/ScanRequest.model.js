@@ -28,7 +28,7 @@ const scanRequestSchema = new Schema({
   scanDocument: String,
 });
 
-export const ScanRequestSchema = mongoose.model(
+export const ScanRequest = mongoose.model(
   "ScanRequest",
   scanRequestSchema
 );
