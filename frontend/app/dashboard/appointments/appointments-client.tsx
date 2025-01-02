@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, Clock, MoreVertical, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AppointmentForm } from "./appointment-form";
 import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 export interface AppointmentInterface {
   _id: string;
   startTime: string;
@@ -83,7 +84,12 @@ export function AppointmentsClient({
     <>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Appointments</h1>
-        <Button onClick={() => setFormOpen(true)}>
+        <Button
+          onClick={() => {
+            setSelectedAppointment(null);
+            setFormOpen(true);
+          }}
+        >
           <Plus className="w-4 h-4 mr-2" />
           New Appointment
         </Button>
@@ -95,8 +101,7 @@ export function AppointmentsClient({
             <TableRow>
               <TableHead>Doctor</TableHead>
               <TableHead>Hospital</TableHead>
-              <TableHead>Start Date & Time</TableHead>
-              <TableHead>End Date & Time</TableHead>
+              <TableHead>Date & Time</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
@@ -113,20 +118,23 @@ export function AppointmentsClient({
                 <TableCell>
                   <div className="flex items-center text-muted-foreground">
                     <Calendar className="w-4 h-4 mr-2" />
-                    {format(new Date(appointment.startTime), "P")}
+                    {format(
+                      toZonedTime(new Date(appointment?.startTime), "UTC"),
+                      "EEE MMM dd yyyy"
+                    )}{" "}
                     <Clock className="w-4 h-4 ml-4 mr-2" />
-                    {format(new Date(appointment.startTime), "p")}
+                    {format(
+                      toZonedTime(new Date(appointment?.startTime), "UTC"),
+                      "hh:mm a"
+                    )}
+                    {" - "}
+                    {format(
+                      toZonedTime(new Date(appointment?.endTime), "UTC"),
+                      "hh:mm a"
+                    )}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center text-muted-foreground">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    {format(new Date(appointment.endTime), "P")}
-                    <Clock className="w-4 h-4 ml-4 mr-2" />
-                    {format(new Date(appointment.endTime), "p")}
-                  </div>
-                </TableCell>
-                {/* <TableCell>{appointment.description}</TableCell> */}
+
                 <TableCell>
                   <div className="flex items-center">
                     <div
