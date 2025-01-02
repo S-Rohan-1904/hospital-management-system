@@ -19,13 +19,10 @@ const createScanRequest = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  const appointmentObject = await Appointment.findById(appointment)
+  const appointmentObject = await Appointment.findById(appointment);
 
-  if (!appointmentObject){
-    throw new ApiError(
-      404,
-      "Invalid Appointment"
-    )
+  if (!appointmentObject) {
+    throw new ApiError(404, "Invalid Appointment");
   }
 
   const scanRequest = await ScanRequest.create({
@@ -51,7 +48,7 @@ const deleteScanRequest = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Forbidden request");
   }
 
-  const scanRequestId = req.params?.id ;
+  const scanRequestId = req.params?.id;
 
   if (!scanRequestId) {
     throw new ApiError(400, "Scan request id is required");
@@ -258,7 +255,7 @@ const updateScanRequest = asyncHandler(async (req, res) => {
   const { role } = req.user;
   const { description } = req.body;
   const scanRequestId = req.params?.id;
-  
+
   const scanRequest = await ScanRequest.findById(scanRequestId);
 
   if (!scanRequest) {

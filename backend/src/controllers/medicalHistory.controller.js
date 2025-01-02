@@ -23,7 +23,7 @@ const getScanDocumentsByMedicalHistory = async (
       hospital: hospitalId,
       dateOfUpload: { $gte: start, $lte: end },
       scanDocument: { $exists: true, $ne: null },
-    })
+    });
 
     const scanDocuments = scanRequests.map((request) => request.scanDocument);
 

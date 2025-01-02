@@ -21,15 +21,15 @@ app.use(passport.initialize());
 
 import userRouter from "./routes/user.routes.js";
 import authRouter from "./routes/auth.routes.js";
-import hospitalRouter from "./routes/hospital.routes.js"
+import hospitalRouter from "./routes/hospital.routes.js";
 import appointmentRouter from "./routes/appointment.routes.js";
 import scanRequestRouter from "./routes/scanRequest.routes.js";
 import medicalHistoryRouter from "./routes/medicalHistory.routes.js";
 app.use("/api/v1/users/", userRouter);
 app.use("/api/v1/appointments/", appointmentRouter);
-app.use("/api/v1/auth/",authRouter);
-app.use("/api/v1/hospital/",hospitalRouter);
-app.use("/api/v1/scan/",scanRequestRouter);
-app.use("/api/v1/history/",medicalHistoryRouter);
+app.use("/api/v1/auth/", authRouter);
+app.use("/api/v1/hospital/", hospitalRouter);
+app.use("/api/v1/scan/", scanRequestRouter);
+app.use("/api/v1/history/", medicalHistoryRouter);
 
 export default app;

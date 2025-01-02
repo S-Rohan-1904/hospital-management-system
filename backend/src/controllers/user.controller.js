@@ -315,5 +315,5 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
-  generateAccessAndRefreshToken
+  generateAccessAndRefreshToken,
 };
