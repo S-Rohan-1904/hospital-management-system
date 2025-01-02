@@ -206,7 +206,7 @@ const getScanRequests = asyncHandler(async (req, res) => {
 const completeScanRequest = asyncHandler(async (req, res) => {
   const { role } = req.user;
 
-  if (role !== "doctor") {
+  if (role !== "scanCentre") {
     throw new ApiError(403, "Forbidden request");
   }
 
@@ -259,20 +259,6 @@ const updateScanRequest = asyncHandler(async (req, res) => {
   const { description } = req.body;
   const scanRequestId = req.params?.id
 
-  const updatedScanDocumentLocalPath = req.file?.path;
-
-  if (!updatedScanDocumentLocalPath) {
-    throw new ApiError(400, "Scan document is required");
-  }
-
-  const updatedScanDocument = await uploadToCloudinary(
-    updatedScanDocumentLocalPath
-  );
-
-  if (!updatedScanDocument) {
-    throw new ApiError(500, "Error uploading scan document");
-  }
-
   const scanRequest = await ScanRequest.findById(scanRequestId);
 
   if (!scanRequest) {
@@ -285,11 +271,23 @@ const updateScanRequest = asyncHandler(async (req, res) => {
     }
     scanRequest.description = description;
   } else if (role === "scanCentre") {
+    const updatedScanDocumentLocalPath = req.file?.path;
+
+    if (!updatedScanDocumentLocalPath) {
+      throw new ApiError(400, "Scan document is required");
+    }
+
+    const updatedScanDocument = await uploadToCloudinary(
+      updatedScanDocumentLocalPath
+    );
+
+    if (!updatedScanDocument) {
+      throw new ApiError(500, "Error uploading scan document");
+    }
 
     const oldScanDocument = scanRequest.scanDocument;
 
     scanRequest.scanDocument = updatedScanDocument;
-    scanRequest.status = "completed";
 
     if (oldScanDocument) {
       await deleteFromCloudinary(oldScanDocument);
