@@ -1,4 +1,5 @@
 import { AppointmentsProvider } from "../context/AppointmentsContext";
+import { HospitalsProvider } from "../context/HospitalsContext";
 import "./globals.css";
 
 export default function RootLayout({
@@ -14,7 +15,9 @@ export default function RootLayout({
         <title>Hospital Management System</title>
       </head>
       <body>
-        <AppointmentsProvider>{children}</AppointmentsProvider>
+        <HospitalsProvider>
+          <AppointmentsProvider>{children}</AppointmentsProvider>
+        </HospitalsProvider>
       </body>
     </html>
   );

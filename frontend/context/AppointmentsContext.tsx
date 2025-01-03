@@ -37,10 +37,13 @@ interface AppointmentsContextType {
   loading: boolean;
   error: string | null;
   fetchAppointments: () => Promise<void>;
-  updateAppointment: (
-    id: string,
-    updatedData: Partial<Appointment>
-  ) => Promise<void>;
+  updateAppointment: ({
+    id,
+    startTime,
+    endTime,
+    doctorId,
+    hospitalId,
+  }) => Promise<void>;
   deleteAppointment: (id: string) => Promise<void>;
   setAppointments: (appointments: Appointment[]) => void;
   requestAppointment: ({
@@ -75,16 +78,23 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateAppointment = async (
-    id: string,
-    updatedData: Partial<Appointment>
-  ) => {
+  const updateAppointment = async ({
+    id,
+    startTime,
+    endTime,
+    doctorId,
+    hospitalId,
+  }) => {
     setLoading(true);
     setError(null);
     try {
-      await axiosInstance.put(`/appointments/${id}`, updatedData, {
-        withCredentials: true,
-      });
+      await axiosInstance.put(
+        `/appointments/${id}`,
+        { startTime, endTime, doctorId, hospitalId },
+        {
+          withCredentials: true,
+        }
+      );
       await fetchAppointments(); // Refresh appointments after update
     } catch (err: any) {
       setError(err.response?.data?.message || "Error updating appointment");
@@ -100,6 +110,8 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
       await axiosInstance.delete(`/appointments/${id}`, {
         withCredentials: true,
       });
+      console.log("deleted successfully");
+
       await fetchAppointments(); // Refresh appointments after deletion
     } catch (err: any) {
       setError(err.response?.data?.message || "Error deleting appointment");

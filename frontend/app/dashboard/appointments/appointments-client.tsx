@@ -1,5 +1,6 @@
 "use client";
 
+import Loading from "../loading";
 import { AppointmentForm } from "./appointment-form";
 import {
   AlertDialog,
@@ -59,7 +60,8 @@ export interface AppointmentInterface {
 
 export function AppointmentsClient() {
   const router = useRouter();
-  const { appointments, loading, error } = useAppointmentsContext();
+  const { appointments, loading, error, deleteAppointment } =
+    useAppointmentsContext();
 
   const [formOpen, setFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -68,9 +70,8 @@ export function AppointmentsClient() {
 
   // Function to handle deleting an appointment
   async function handleDelete(id: string) {
-    const { remove } = useAppointments(id); // Use the individual hook for deleting
     try {
-      await remove();
+      await deleteAppointment(id);
       setDeleteDialogOpen(false);
       router.refresh();
     } catch (err) {
@@ -79,19 +80,11 @@ export function AppointmentsClient() {
     }
   }
 
-  // Function to handle updating or creating an appointment
-  async function handleSave(updatedAppointment: AppointmentInterface) {
-    const { update } = useAppointments(updatedAppointment._id); // Use the individual hook for updating
-    try {
-      await update(updatedAppointment);
-      setFormOpen(false);
-      router.refresh();
-    } catch (err) {
-      console.error("Error saving appointment:", err);
-      // Handle error (e.g., show notification)
-    }
+  if (loading) {
+    return <Loading />;
+  } else if (error) {
+    return <div>Error: {error}</div>;
   }
-
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -131,19 +124,13 @@ export function AppointmentsClient() {
                   <div className="flex items-center text-muted-foreground">
                     <Calendar className="w-4 h-4 mr-2" />
                     {format(
-                      toZonedTime(new Date(appointment?.startTime), "UTC"),
-                      "EEE MMM dd yyyy"
+                      new Date(appointment?.startTime),
+                      "dd/MM/yyyy"
                     )}{" "}
                     <Clock className="w-4 h-4 ml-4 mr-2" />
-                    {format(
-                      toZonedTime(new Date(appointment?.startTime), "UTC"),
-                      "hh:mm a"
-                    )}
+                    {format(new Date(appointment?.startTime), "hh:mm a")}
                     {" - "}
-                    {format(
-                      toZonedTime(new Date(appointment?.endTime), "UTC"),
-                      "hh:mm a"
-                    )}
+                    {format(new Date(appointment?.endTime), "hh:mm a")}
                   </div>
                 </TableCell>
 
