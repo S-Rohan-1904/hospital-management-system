@@ -3,14 +3,15 @@ import { ScanRequest } from "../models/scanRequest.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import { Hospital } from "../models/hospital.model.js";
 
-const getScanDocumentsByMedicalHistory = async ({
+const getScanDocumentsByMedicalHistory = async (
   patientId,
   doctorId,
   hospitalId,
   startDate,
-  endDate,
-}) => {
+  endDate
+) => {
   try {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -22,13 +23,13 @@ const getScanDocumentsByMedicalHistory = async ({
       hospital: hospitalId,
       dateOfUpload: { $gte: start, $lte: end },
       scanDocument: { $exists: true, $ne: null },
-    }).select("scanDocument");
+    })
 
     const scanDocuments = scanRequests.map((request) => request.scanDocument);
 
     return scanDocuments;
   } catch (error) {
-    throw new ApiError(500, "Error fetching scan documents");
+    throw new ApiError(500, error.message || "Error fetching scan documents");
   }
 };
 
@@ -98,7 +99,7 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
 });
 
 const getMedicalHistories = asyncHandler(async (req, res) => {
-  const { patientId, doctorId } = req.params;
+  const { patientId, doctorId } = req.body;
 
   if (req.user?.role !== "doctor") {
     throw new ApiError(403, "Forbidden request");
