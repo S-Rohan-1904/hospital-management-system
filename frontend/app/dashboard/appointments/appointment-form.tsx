@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { cn } from "@/lib/utils";
 import { format, set } from "date-fns";
 import { add } from "date-fns";
@@ -159,6 +160,7 @@ export function AppointmentForm({
   onOpenChange,
   appointment = null,
 }: AppointmentFormProps) {
+  const { requestAppointment } = useAppointmentsContext();
   const [startDate, setStartDate] = useState<string>(
     format(
       toZonedTime(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone),
@@ -184,6 +186,8 @@ export function AppointmentForm({
   };
 
   const handleSelectChangeDoctor = (value) => {
+    console.log(value);
+
     setSelectedDoctor(value);
   };
 
@@ -219,12 +223,19 @@ export function AppointmentForm({
 
   const router = useRouter();
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit() {
     try {
       if (appointment) {
-        // await updateAppointment(appointment._id, formData);
+        // await updateAppointment(appointment._id, { startTime: startDate, endTime: endDate, doctorId: selectedDoctor, hospitalId: selectedHospital });
       } else {
-        // await createAppointment(formData);
+        console.log(selectedDoctor);
+
+        // await requestAppointment({
+        //   startTime: startDate,
+        //   endTime: endDate,
+        //   doctorId: selectedDoctor,
+        //   hospitalId: selectedHospital,
+        // });
       }
       router.refresh();
       onOpenChange(false);
@@ -310,14 +321,7 @@ export function AppointmentForm({
               </SelectContent>
             </Select>
           </div>
-          {/* <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              defaultValue={appointment?.description}
-            />
-          </div> */}
+
           <div className="flex justify-end">
             <Button type="submit">{appointment ? "Update" : "Create"}</Button>
           </div>

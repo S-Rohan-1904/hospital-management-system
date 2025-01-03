@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Calendar, Clock, MoreVertical, Plus } from "lucide-react";
+import { AppointmentForm } from "./appointment-form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,19 +26,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { AppointmentForm } from "./appointment-form";
+import { useAppointmentsContext } from "@/context/AppointmentsContext";
+import { useAppointments } from "@/hooks/useAppointments";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import { Calendar, Clock, MoreVertical, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 export interface AppointmentInterface {
   _id: string;
   startTime: string;
@@ -54,29 +57,38 @@ export interface AppointmentInterface {
   };
 }
 
-interface AppointmentsClientProps {
-  appointments: AppointmentInterface[];
-}
-
-export function AppointmentsClient({
-  appointments: initialAppointments,
-}: AppointmentsClientProps) {
+export function AppointmentsClient() {
   const router = useRouter();
-  const [appointments, setAppointments] = useState(initialAppointments);
+  const { appointments, loading, error } = useAppointmentsContext();
+
   const [formOpen, setFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentInterface | null>(null);
 
+  // Function to handle deleting an appointment
   async function handleDelete(id: string) {
+    const { remove } = useAppointments(id); // Use the individual hook for deleting
     try {
-      // await deleteAppointment(id);
-      setAppointments(appointments.filter((a) => a._id !== id));
+      await remove();
       setDeleteDialogOpen(false);
       router.refresh();
-    } catch (error) {
-      console.error("Error deleting appointment:", error);
-      // You could add error handling UI here
+    } catch (err) {
+      console.error("Error deleting appointment:", err);
+      // Handle error (e.g., show notification)
+    }
+  }
+
+  // Function to handle updating or creating an appointment
+  async function handleSave(updatedAppointment: AppointmentInterface) {
+    const { update } = useAppointments(updatedAppointment._id); // Use the individual hook for updating
+    try {
+      await update(updatedAppointment);
+      setFormOpen(false);
+      router.refresh();
+    } catch (err) {
+      console.error("Error saving appointment:", err);
+      // Handle error (e.g., show notification)
     }
   }
 
@@ -91,7 +103,7 @@ export function AppointmentsClient({
           }}
         >
           <Plus className="w-4 h-4 mr-2" />
-          New Appointment
+          Request Appointment
         </Button>
       </div>
 
@@ -144,7 +156,7 @@ export function AppointmentsClient({
                           rescheduled: "bg-orange-500",
                           pending: "bg-yellow-500",
                           rejected: "bg-red-500",
-                        }[appointment.status] || "bg-gray-500" // Fallback for unexpected statuses
+                        }[appointment.status] || "bg-gray-500"
                       }`}
                     />
                     {appointment.status}
@@ -189,6 +201,7 @@ export function AppointmentsClient({
         open={formOpen}
         onOpenChange={setFormOpen}
         appointment={selectedAppointment}
+        // onSubmit={handleSave} // Handle both update and create operations
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

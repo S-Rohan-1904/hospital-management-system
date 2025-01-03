@@ -1,4 +1,7 @@
+"use client";
+
 import { AppointmentsClient } from "./appointments-client";
+import { useAppointmentsContext } from "@/context/AppointmentsContext";
 
 const appointments = [
   {
@@ -91,6 +94,6 @@ const appointments = [
   },
 ];
 
-export default async function AppointmentsPage() {
-  return <AppointmentsClient appointments={appointments} />;
+export default function AppointmentsPage() {
+  return <AppointmentsClient />;
 }
