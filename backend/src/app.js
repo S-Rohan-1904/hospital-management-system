@@ -11,7 +11,7 @@ app.use(express.static("public"));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
@@ -21,11 +21,11 @@ app.use(passport.initialize());
 
 import userRouter from "./routes/user.routes.js";
 import authRouter from "./routes/auth.routes.js";
-import hospitalRouter from "./routes/hospital.routes.js"
+import hospitalRouter from "./routes/hospital.routes.js";
 import appointmentRouter from "./routes/appointment.routes.js";
 app.use("/api/v1/users/", userRouter);
 app.use("/api/v1/appointments/", appointmentRouter);
-app.use("/api/v1/auth/",authRouter);
-app.use("/api/v1/hospital/",hospitalRouter);
+app.use("/api/v1/auth/", authRouter);
+app.use("/api/v1/hospital/", hospitalRouter);
 
 export default app;

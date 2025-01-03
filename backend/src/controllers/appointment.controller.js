@@ -6,7 +6,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 const isDoctorFree = async (doctorId, startTime, endTime) => {
   const overlappingAppointments = await Appointment.find({
     doctor: doctorId,
-    status: { $in: ["scheduled", "rescheduled"]},
+    status: { $in: ["scheduled", "rescheduled"] },
     $or: [
       { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
       { startTime: { $lt: startTime }, endTime: { $gt: startTime } },
@@ -35,7 +35,7 @@ const requestAppointment = asyncHandler(async (req, res) => {
   }
 
   const isDoctorFreeBoolean = await isDoctorFree(doctorId, startTime, endTime);
-  
+
   if (!isDoctorFreeBoolean) {
     throw new ApiError(409, "Doctor is not free at this time");
   }
@@ -89,26 +89,29 @@ const approveOrRejectAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(409, `Appointment already ${appointment.status}`);
   }
 
-  if (await isDoctorFree(appointment.doctor,appointment.startTime,appointment.endTime)) {
+  if (
+    await isDoctorFree(
+      appointment.doctor,
+      appointment.startTime,
+      appointment.endTime
+    )
+  ) {
     appointment.status = status;
     await appointment.save({ validateBeforeSave: false });
-  
+
     return res
       .status(200)
-      .json(new ApiResponse(200, appointment, `Appointment ${status}`));   
+      .json(new ApiResponse(200, appointment, `Appointment ${status}`));
   } else {
-    throw new ApiError(
-      409,
-      "Doctor is not free at this time"
-    )
+    throw new ApiError(409, "Doctor is not free at this time");
   }
 });
 
 const rescheduleAppointment = asyncHandler(async (req, res) => {
-  if (req.user?.role !== "doctor") {
-    throw new ApiError(403, "Forbidden request");
-  }
-  const { startTime, endTime } = req.body;
+  // if (req.user?.role !== "doctor") {
+  //   throw new ApiError(403, "Forbidden request");
+  // }
+  const { startTime, endTime, doctor, hospital } = req.body;
 
   if (!startTime && !endTime) {
     throw new ApiError(400, "All fields are required");
@@ -126,7 +129,10 @@ const rescheduleAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Appointment not found");
   }
 
-  if (!appointment.doctor.equals(req.user._id)) {
+  if (user.role === "patient" && !appointment.patient.equals(req.user._id)) {
+    throw new ApiError(403, "Forbidden request");
+  }
+  if (user.role === "doctor" && !appointment.doctor.equals(req.user._id)) {
     throw new ApiError(403, "Forbidden request");
   }
 
@@ -134,12 +140,29 @@ const rescheduleAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Appointment has to be scheduled first");
   }
 
-  if (!isDoctorFree(req.user._id, startTime, endTime)) {
+  if (user.role === "patient" && !isDoctorFree(doctor, startTime, endTime)) {
+    throw new ApiError(409, "Doctor is not free at this time");
+  }
+
+  if (
+    user.role === "doctor" &&
+    !isDoctorFree(req.user._id, startTime, endTime)
+  ) {
     throw new ApiError(409, "Doctor is not free at this time");
   }
   appointment.status = "rescheduled";
   appointment.startTime = startTime;
   appointment.endTime = endTime;
+
+  if (user.role === "patient" && (hospital || doctor)) {
+    if (!hospital && !doctor) {
+      throw new ApiError(400, "Both doctor and hospital are required");
+    }
+
+    appointment.hospital = hospital;
+    appointment.doctor = doctor;
+  }
+
   await appointment.save({ validateBeforeSave: false });
 
   return res
@@ -251,10 +274,10 @@ const updateDescriptionOfAppointment = asyncHandler(async (req, res) => {
 
   const updatedAppointment = await Appointment.findByIdAndUpdate(
     appointmentId,
-    { 
+    {
       $set: {
-        description
-      }
+        description,
+      },
     },
     { new: true, runValidators: true }
   );
