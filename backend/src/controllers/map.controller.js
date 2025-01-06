@@ -25,11 +25,7 @@ async function getAccessToken() {
 
     return { accessToken };
   } catch (error) {
-      throw new ApiError(
-        500,
-        "Error fetching access token",
-        error.message
-    )
+    throw new ApiError(res, 500, "Error fetching access token", error.message);
   }
 }
 
@@ -38,7 +34,7 @@ const getNearbyHospital = asyncHandler(async (req, res) => {
     const accessToken = await getAccessToken();
 
     if (!accessToken) {
-      throw new ApiError(
+      throw new ApiError(res, 
         404,
         "Something went wrong while fetching nearby hospitals."
       );
@@ -61,47 +57,42 @@ const getNearbyHospital = asyncHandler(async (req, res) => {
     );
 
     if (NearbyHospitals.suggestedLocations.length === 0) {
-      throw new ApiError(500, "Unable to fetch nearby Hospitals");
+      throw new ApiError(res, 500, "Unable to fetch nearby Hospitals");
     }
 
     return res
       .status(200)
-      .json(new ApiResponse(
-        200,
-        NearbyHospitals.suggestedLocations,
-        "Nearby Hospitals successfully fetched."
-      ));
+      .json(
+        new ApiResponse(
+          200,
+          NearbyHospitals.suggestedLocations,
+          "Nearby Hospitals successfully fetched."
+        )
+      );
   } catch (error) {
-    throw new ApiError(500, error.message || "An error occured");
+    throw new ApiError(res, 500, error.message || "An error occured");
   }
 });
 
-const getAllHospitals = asyncHandler(async (req,res) => {
-  const hospitals = await Hospital.find({})
-  .populate({
+const getAllHospitals = asyncHandler(async (req, res) => {
+  const hospitals = await Hospital.find({}).populate({
     path: "doctors",
     select: "fullName _id specialization",
   });
 
-  if (!hospitals || hospitals.length === 0 ){
-    throw new ApiError(
-      404,
-      "No hospital found."
-    )
+  if (!hospitals || hospitals.length === 0) {
+    throw new ApiError(res, 404, "No hospital found.");
   }
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(200,
-      hospitals,
-      "Hospitals have been successfully fetched."
-    )
-  )
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        hospitals,
+        "Hospitals have been successfully fetched."
+      )
+    );
+});
 
-})
-
-export {
-  getNearbyHospital,
-  getAllHospitals
-};
+export { getNearbyHospital, getAllHospitals };
