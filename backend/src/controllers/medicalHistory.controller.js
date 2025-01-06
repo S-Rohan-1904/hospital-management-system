@@ -29,7 +29,7 @@ const getScanDocumentsByMedicalHistory = async (
 
     return scanDocuments;
   } catch (error) {
-    throw new ApiError(500, error.message || "Error fetching scan documents");
+    throw new ApiError(res, 500, error.message || "Error fetching scan documents");
   }
 };
 
@@ -53,11 +53,11 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
     !diagnosis ||
     !description
   ) {
-    throw new ApiError(400, "All required fields must be provided");
+    throw new ApiError(res, 400, "All required fields must be provided");
   }
 
   if (req.user?.role !== "doctor") {
-    throw new ApiError(403, "Forbidden request");
+    throw new ApiError(res, 403, "Forbidden request");
   }
 
   const scanDocuments = await getScanDocumentsByMedicalHistory(
@@ -69,7 +69,7 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
   );
 
   if (!scanDocuments) {
-    throw new ApiError(500, "Error fetching scan documents");
+    throw new ApiError(res, 500, "Error fetching scan documents");
   }
 
   const medicalHistory = await MedicalHistory.create({
@@ -84,7 +84,7 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
   });
 
   if (!medicalHistory) {
-    throw new ApiError(500, "Failed to create medical history");
+    throw new ApiError(res, 500, "Failed to create medical history");
   }
 
   return res
@@ -102,7 +102,7 @@ const getMedicalHistories = asyncHandler(async (req, res) => {
   const { patientId, doctorId } = req.body;
 
   if (req.user?.role !== "doctor") {
-    throw new ApiError(403, "Forbidden request");
+    throw new ApiError(res, 403, "Forbidden request");
   }
 
   let filter = {};
@@ -114,7 +114,7 @@ const getMedicalHistories = asyncHandler(async (req, res) => {
     .exec();
 
   if (!medicalHistories) {
-    throw new ApiError(404, "No medical histories found");
+    throw new ApiError(res, 404, "No medical histories found");
   }
 
   return res
@@ -131,14 +131,14 @@ const getMedicalHistories = asyncHandler(async (req, res) => {
 const getMedicalHistoryById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (req.user?.role !== "doctor") {
-    throw new ApiError(403, "Forbidden request");
+    throw new ApiError(res, 403, "Forbidden request");
   }
   const medicalHistory = await MedicalHistory.findById(id)
     .populate("patient doctor hospital")
     .exec();
 
   if (!medicalHistory) {
-    throw new ApiError(404, "Medical history not found");
+    throw new ApiError(res, 404, "Medical history not found");
   }
 
   return res.status(200).json(new ApiResponse(200, medicalHistory));
@@ -147,7 +147,7 @@ const getMedicalHistoryById = asyncHandler(async (req, res) => {
 const updateMedicalHistory = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (req.user?.role !== "doctor") {
-    throw new ApiError(403, "Forbidden request");
+    throw new ApiError(res, 403, "Forbidden request");
   }
   const updateFields = {};
 
@@ -158,7 +158,7 @@ const updateMedicalHistory = asyncHandler(async (req, res) => {
   }
 
   if (Object.keys(updateFields).length === 0) {
-    throw new ApiError(400, "No fields to update provided");
+    throw new ApiError(res, 400, "No fields to update provided");
   }
   const updatedMedicalHistory = await MedicalHistory.findByIdAndUpdate(
     id,
@@ -167,7 +167,7 @@ const updateMedicalHistory = asyncHandler(async (req, res) => {
   );
 
   if (!updatedMedicalHistory) {
-    throw new ApiError(404, "Medical history not found");
+    throw new ApiError(res, 404, "Medical history not found");
   }
 
   return res
@@ -185,13 +185,13 @@ const deleteMedicalHistory = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   if (req.user?.role !== "doctor") {
-    throw new ApiError(403, "Forbidden request");
+    throw new ApiError(res, 403, "Forbidden request");
   }
 
   const deletedMedicalHistory = await MedicalHistory.findByIdAndDelete(id);
 
   if (!deletedMedicalHistory) {
-    throw new ApiError(404, "Medical history not found");
+    throw new ApiError(res, 404, "Medical history not found");
   }
 
   return res

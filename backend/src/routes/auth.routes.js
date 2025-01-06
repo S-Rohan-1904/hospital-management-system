@@ -40,7 +40,7 @@ router
             )
           );
       } catch (error) {
-        throw new ApiError(500, error.message);
+        throw new ApiError(res, 500, error.message);
       }
     }
   );
