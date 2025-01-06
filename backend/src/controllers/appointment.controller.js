@@ -156,7 +156,6 @@ const rescheduleAppointment = asyncHandler(async (req, res) => {
     );
 });
 
-// appointments for a particular doctor or a particular patient
 const getAppointmentsById = asyncHandler(async (req, res) => {
   const { _id, role } = req.user;
   const userId = _id;
@@ -330,10 +329,34 @@ const updateAppointment = asyncHandler(async (req, res) => {
 
 });
 
+const deleteAppointment = asyncHandler(async (req, res) => {
+  const { id: appointmentId } = req.params;
+
+  if (!appointmentId) {
+    throw new ApiError(400, "Appointment id is required");
+  }
+
+  const deletedAppointment = await Appointment.findByIdAndDelete(appointmentId);
+
+  if (!deletedAppointment) {
+    throw new ApiError(404, "Appointment not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        deletedAppointment,
+        "Appointment deleted successfully"
+      )
+    );
+});
 export {
   requestAppointment,
   approveOrRejectAppointment,
   rescheduleAppointment,
   getAppointmentsById,
   updateAppointment,
+  deleteAppointment,
 };

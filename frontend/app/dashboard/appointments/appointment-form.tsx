@@ -25,6 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAppointmentsContext } from "@/context/AppointmentsContext";
+import { useHospitalsContext } from "@/context/HospitalsContext";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { format, set } from "date-fns";
 import { add } from "date-fns";
@@ -33,120 +36,120 @@ import { Calendar as CalendarIcon, ClockIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const doctors = [
-  {
-    _id: "doctor1",
-    fullName: "Dr. Jane Smith",
-    email: "jane.smith@example.com",
-    specialization: "Cardiology",
-  },
-  {
-    _id: "doctor2",
-    fullName: "Dr. John Doe",
-    email: "john.doe@example.com",
-    specialization: "Dermatology",
-  },
-  {
-    _id: "doctor3",
-    fullName: "Dr. Emily Davis",
-    email: "emily.davis@example.com",
-    specialization: "Pediatrics",
-  },
-  {
-    _id: "doctor4",
-    fullName: "Dr. Michael Lee",
-    email: "michael.lee@example.com",
-    specialization: "Endocrinology",
-  },
-  {
-    _id: "doctor5",
-    fullName: "Dr. Sarah Johnson",
-    email: "sarah.johnson@example.com",
-    specialization: "Orthopedics",
-  },
-  {
-    _id: "doctor6",
-    fullName: "Dr. Michael Brown",
-    email: "michael.brown@example.com",
-    specialization: "Neurology",
-  },
-];
+// const doctors = [
+//   {
+//     _id: "doctor1",
+//     fullName: "Dr. Jane Smith",
+//     email: "jane.smith@example.com",
+//     specialization: "Cardiology",
+//   },
+//   {
+//     _id: "doctor2",
+//     fullName: "Dr. John Doe",
+//     email: "john.doe@example.com",
+//     specialization: "Dermatology",
+//   },
+//   {
+//     _id: "doctor3",
+//     fullName: "Dr. Emily Davis",
+//     email: "emily.davis@example.com",
+//     specialization: "Pediatrics",
+//   },
+//   {
+//     _id: "doctor4",
+//     fullName: "Dr. Michael Lee",
+//     email: "michael.lee@example.com",
+//     specialization: "Endocrinology",
+//   },
+//   {
+//     _id: "doctor5",
+//     fullName: "Dr. Sarah Johnson",
+//     email: "sarah.johnson@example.com",
+//     specialization: "Orthopedics",
+//   },
+//   {
+//     _id: "doctor6",
+//     fullName: "Dr. Michael Brown",
+//     email: "michael.brown@example.com",
+//     specialization: "Neurology",
+//   },
+// ];
 
 // Dummy hospitals with _id and doctors embedded with full info
-const hospitals = [
-  {
-    _id: "hospital1",
-    name: "City General Hospital",
-    address: "123 Main Street, New York, NY",
-    contact: "+1234567890",
-    location: {
-      type: "Point",
-      coordinates: [40.7128, -74.006], // Example coordinates for New York, NY
-    },
-    doctors: [
-      {
-        _id: "doctor1",
-        fullName: "Dr. Jane Smith",
-        email: "jane.smith@example.com",
-        specialization: "Cardiology",
-      },
-      {
-        _id: "doctor2",
-        fullName: "Dr. John Doe",
-        email: "john.doe@example.com",
-        specialization: "Dermatology",
-      },
-      {
-        _id: "doctor3",
-        fullName: "Dr. Emily Davis",
-        email: "emily.davis@example.com",
-        specialization: "Pediatrics",
-      },
-    ],
-  },
-  {
-    _id: "hospital2",
-    name: "Sunnydale Medical Center",
-    address: "456 Sunny Ave, Sunnydale, CA",
-    contact: "+0987654321",
-    location: {
-      type: "Point",
-      coordinates: [34.0522, -118.2437], // Example coordinates for Los Angeles, CA
-    },
-    doctors: [
-      {
-        _id: "doctor4",
-        fullName: "Dr. Michael Lee",
-        email: "michael.lee@example.com",
-        specialization: "Endocrinology",
-      },
-      {
-        _id: "doctor5",
-        fullName: "Dr. Sarah Johnson",
-        email: "sarah.johnson@example.com",
-        specialization: "Orthopedics",
-      },
-    ],
-  },
-  {
-    _id: "hospital3",
-    name: "Green Valley Hospital",
-    address: "789 Green Rd, Green Valley, IL",
-    contact: "+1122334455",
-    location: {
-      type: "Point",
-      coordinates: [41.8781, -87.6298], // Example coordinates for Chicago, IL
-    },
-    doctors: [
-      {
-        _id: "doctor6",
-        fullName: "Dr. Michael Brown",
-        email: "michael.brown@example.com",
-        specialization: "Neurology",
-      },
-    ],
-  },
-];
+// const hospitals = [
+//   {
+//     _id: "hospital1",
+//     name: "City General Hospital",
+//     address: "123 Main Street, New York, NY",
+//     contact: "+1234567890",
+//     location: {
+//       type: "Point",
+//       coordinates: [40.7128, -74.006], // Example coordinates for New York, NY
+//     },
+//     doctors: [
+//       {
+//         _id: "doctor1",
+//         fullName: "Dr. Jane Smith",
+//         email: "jane.smith@example.com",
+//         specialization: "Cardiology",
+//       },
+//       {
+//         _id: "doctor2",
+//         fullName: "Dr. John Doe",
+//         email: "john.doe@example.com",
+//         specialization: "Dermatology",
+//       },
+//       {
+//         _id: "doctor3",
+//         fullName: "Dr. Emily Davis",
+//         email: "emily.davis@example.com",
+//         specialization: "Pediatrics",
+//       },
+//     ],
+//   },
+//   {
+//     _id: "hospital2",
+//     name: "Sunnydale Medical Center",
+//     address: "456 Sunny Ave, Sunnydale, CA",
+//     contact: "+0987654321",
+//     location: {
+//       type: "Point",
+//       coordinates: [34.0522, -118.2437], // Example coordinates for Los Angeles, CA
+//     },
+//     doctors: [
+//       {
+//         _id: "doctor4",
+//         fullName: "Dr. Michael Lee",
+//         email: "michael.lee@example.com",
+//         specialization: "Endocrinology",
+//       },
+//       {
+//         _id: "doctor5",
+//         fullName: "Dr. Sarah Johnson",
+//         email: "sarah.johnson@example.com",
+//         specialization: "Orthopedics",
+//       },
+//     ],
+//   },
+//   {
+//     _id: "hospital3",
+//     name: "Green Valley Hospital",
+//     address: "789 Green Rd, Green Valley, IL",
+//     contact: "+1122334455",
+//     location: {
+//       type: "Point",
+//       coordinates: [41.8781, -87.6298], // Example coordinates for Chicago, IL
+//     },
+//     doctors: [
+//       {
+//         _id: "doctor6",
+//         fullName: "Dr. Michael Brown",
+//         email: "michael.brown@example.com",
+//         specialization: "Neurology",
+//       },
+//     ],
+//   },
+// ];
 
 interface AppointmentFormProps {
   open: boolean;
@@ -159,6 +162,14 @@ export function AppointmentForm({
   onOpenChange,
   appointment = null,
 }: AppointmentFormProps) {
+  const { hospitals } = useHospitalsContext();
+  useEffect(() => {
+    console.log(hospitals);
+
+    console.log("selectedHospital", selectedHospital);
+  });
+
+  const { requestAppointment, updateAppointment } = useAppointmentsContext();
   const [startDate, setStartDate] = useState<string>(
     format(
       toZonedTime(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone),
@@ -178,12 +189,15 @@ export function AppointmentForm({
 
   const [selectedHospital, setSelectedHospital] = useState<string>("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
+  const { toast } = useToast();
 
   const handleSelectChangeHospital = (value) => {
     setSelectedHospital(value);
   };
 
   const handleSelectChangeDoctor = (value) => {
+    console.log(value);
+
     setSelectedDoctor(value);
   };
 
@@ -219,16 +233,34 @@ export function AppointmentForm({
 
   const router = useRouter();
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit() {
     try {
       if (appointment) {
-        // await updateAppointment(appointment._id, formData);
+        await updateAppointment({
+          id: appointment._id,
+          startTime: startDate,
+          endTime: endDate,
+          doctorId: selectedDoctor,
+          hospitalId: selectedHospital,
+        });
       } else {
-        // await createAppointment(formData);
+        await requestAppointment({
+          startTime: startDate,
+          endTime: endDate,
+          doctorId: selectedDoctor,
+          hospitalId: selectedHospital,
+        });
+
+        console.log("appointment request created");
       }
       router.refresh();
       onOpenChange(false);
     } catch (error) {
+      toast({
+        title: "Error",
+        description: "There was an issue with your request. Please try again.",
+        variant: "destructive", // This can be a different variant like 'destructive' for errors
+      });
       console.error("Error submitting form:", error);
       // You could add error handling UI here
     }
@@ -310,14 +342,7 @@ export function AppointmentForm({
               </SelectContent>
             </Select>
           </div>
-          {/* <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              defaultValue={appointment?.description}
-            />
-          </div> */}
+
           <div className="flex justify-end">
             <Button type="submit">{appointment ? "Update" : "Create"}</Button>
           </div>

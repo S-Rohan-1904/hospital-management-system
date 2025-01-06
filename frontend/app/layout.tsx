@@ -1,3 +1,5 @@
+import { AppointmentsProvider } from "../context/AppointmentsContext";
+import { HospitalsProvider } from "../context/HospitalsContext";
 import "./globals.css";
 
 export default function RootLayout({
@@ -12,7 +14,11 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Hospital Management System</title>
       </head>
-      <body>{children}</body>
+      <body>
+        <HospitalsProvider>
+          <AppointmentsProvider>{children}</AppointmentsProvider>
+        </HospitalsProvider>
+      </body>
     </html>
   );
 }
