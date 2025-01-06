@@ -237,7 +237,6 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
 const updateAppointment = asyncHandler(async (req, res) => {
   const { id: appointmentId } = req.params;
   const { role } = req.user 
-  console.log(role,req.user)
 
   if (!appointmentId) {
     throw new ApiError(res, 400, "Appointment id is required");
@@ -279,6 +278,10 @@ const updateAppointment = asyncHandler(async (req, res) => {
 
     const appointment = await Appointment.findById(appointmentId)
 
+    if (!appointment) {
+      throw new ApiError(res, 404, "Appointment not found")
+    }
+
     if (appointment.status!=="pending"){
       throw new ApiError(res, 400, `Appointment already ${appointment.status}`)
     }
@@ -299,26 +302,16 @@ const updateAppointment = asyncHandler(async (req, res) => {
       throw new ApiError(res, 400, "No fields to update provided");
     }
 
-
-
     Object.assign(appointment, updateFields);
-
-    const updatedAppointment = await Appointment.findByIdAndUpdate(
-      appointmentId,
-      updateFields,
-      { new: true, runValidators: true }
-    );
-  
-    if (!updatedAppointment) {
-      throw new ApiError(res, 404, "Appointment not found");
-    }
+    
+    await appointment.save({ validateBeforeSave: false });
   
     return res
       .status(200)
       .json(
         new ApiResponse(
           200,
-          updatedAppointment,
+          appointment,
           "Appointment updated successfully"
         )
       ); 

@@ -306,6 +306,39 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Avatar image updated successfully"));
 });
 
+const checkAuthenicated = asyncHandler(async (req, res) => {
+  try {
+    const token = req.cookies?.accessToken;
+  
+    if (!token) {
+      throw new ApiError(res, 401, "Unauthorized request");
+    }
+  
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+  
+    const user = await User.findById(decodedToken?._id).select(
+      "-password -refreshToken"
+    );
+  
+    if (!user) {
+      return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          {"authenicated":"true"},
+          "Invalid Access Token"
+        ))
+    }
+  
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {"authenicated":"true"}))
+  } catch (error) {
+    throw new ApiError(res, 401, error?.message || "Invalid access token");
+  }
+})
+
 export {
   registerUser,
   loginUser,
@@ -316,4 +349,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   generateAccessAndRefreshToken,
+  checkAuthenicated,
 };
