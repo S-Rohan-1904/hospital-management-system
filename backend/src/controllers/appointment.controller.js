@@ -396,11 +396,13 @@ const deleteAppointment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(409, {}, "Cannot delete appointment.Appointment already scheduled"));
   }
 
-  if (!deletedAppointment) {
+  if (!appointment) {
     return res
       .status(404)
       .json(new ApiResponse(404, {}, "Appointment not found"));
   }
+
+  const deletedAppointment = await Appointment.findByIdAndDelete(appointmentId);
 
   return res
     .status(200)
