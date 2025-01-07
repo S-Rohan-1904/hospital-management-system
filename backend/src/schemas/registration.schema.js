@@ -22,9 +22,9 @@ const passwordSchema = z
   );
 
 export const registerUserSchema = z.object({
-  username: usernameSchema,
+  username: z.string(),
   email: z.string().email(),
-  password: passwordSchema,
+  password: z.string(),
   fullName: z
     .string()
     .min(3, "Full name must be at least 3 characters long.")
@@ -32,5 +32,5 @@ export const registerUserSchema = z.object({
   role: z.enum(["doctor", "patient", "scanCentre"]),
   address: z.string().min(10, "Address cannot be empty"),
   gender: z.enum(["male", "female", "other"]),
-  specialization: z.string(),
+  specialization: z.string().optional(),
 });
