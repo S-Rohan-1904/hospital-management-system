@@ -46,23 +46,23 @@ const registerUser = asyncHandler(async (req, res) => {
   const existingUser = await User.findOne({ $or: [{ username }, { email }] });
 
   if (existingUser) {
-    throw new ApiError(res, 409, "User already exists");
+    return res.status(409).json(new ApiResponse(409,{},"User already exists"))
   }
 
   const avatarLocalFilePath = req.files?.avatar?.[0]?.path;
 
   if (!avatarLocalFilePath) {
-    throw new ApiError(res, 400, "Avatar file is required");
+    return res.status(400).json(new ApiResponse(400,{},"Avatar file is required"))
   }
 
   const avatar = await uploadToCloudinary(avatarLocalFilePath);
 
   if (!avatar) {
-    throw new ApiError(res, 500, "Failed to upload avatar");
+    return res.status(500).json(new ApiResponse(500,{},"Failed to upload avatar"))
   }
 
   if (role === "doctor" && !specialization) {
-    throw new ApiError(res, 400, "Specialization is required for doctors");
+    return res.status(400).json(new ApiResponse(400,{},"Specialization is required for doctors"))
   }
 
   const userData = {
@@ -87,7 +87,7 @@ const registerUser = asyncHandler(async (req, res) => {
   );
 
   if (!createdUser) {
-    throw new ApiError(res, 500, "Something went wrong while registering the user");
+    return res.status(500).json(new ApiResponse(500,{},"Something went wrong while registering the user"))
   }
 
   return res
@@ -98,27 +98,31 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!username && !email) {
-    throw new ApiError(res, 400, "username or email is required");
+  if (!email) {
+    return res.status(400).json(new ApiResponse(400,{},"Email is required"))
   }
 
-  const user = await User.findOne({ $or: [{ username }, { email }] });
+  const user = await User.findOne({ email });
 
   if (!user) {
-    throw new ApiError(res, 404, "User does not exist");
+    return res.status(404).json(new ApiResponse(404,{},"User does not exist"))
   }
 
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
-    throw new ApiError(res, 401, "Invalid user credentials");
+    return res.status(401).json(new ApiResponse(401,{},"Invalid user credentials"))
   }
 
-  const { refreshToken, accessToken } = await generateAccessAndRefreshToken(
-    user._id
-  );
+  try {
+    const { refreshToken, accessToken } = await generateAccessAndRefreshToken(
+      user._id
+    );
+  } catch (error) {
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while generating referesh and access token"))
+  }
 
   const loggedInUser = await User.findOne(user._id).select(
     "-password -refreshToken"
@@ -168,7 +172,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies.refreshToken;
   if (!incomingRefreshToken) {
-    throw new ApiError(res, 401, "Unauthorized request");
+    return res.status(401).json(new ApiResponse(401,{},"Unauthorized request"))
   }
   try {
     const decodedToken = jwt.verify(
@@ -178,11 +182,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const user = await User.findById(decodedToken?._id);
 
     if (!user) {
-      throw new ApiError(res, 401, "Invalid refresh token");
+      return res.status(401).json(new ApiResponse(401,{},"Invalid refresh token"))
     }
 
     if (user?.refreshToken !== incomingRefreshToken) {
-      throw new ApiError(res, 401, "Refresh Token is invalid");
+      return res.status(401).json(new ApiResponse(401,{},"Refresh Token is invalid"))
     }
 
     const options = {
@@ -205,7 +209,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    throw new ApiError(res, 401, error?.message || "Invalid refresh token");
+    return res.status(401).json(new ApiResponse(401, {}, error?.message || "Invalid refresh token"))
   }
 });
 
@@ -217,7 +221,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   const isPasswordValid = user.isPasswordCorrect(oldPassword);
 
   if (!isPasswordValid) {
-    throw new ApiError(res, 400, "Invalid old password");
+    return res.status(400).json(new ApiResponse(400, {}, "Invalid old password"))
   }
 
   user.password = newPassword;
@@ -237,7 +241,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email, gender, address, specialization } = req.body;
   if (!fullName && !email && !gender && !address) {
-    throw new ApiError(res, 400, "Atleast one field is required");
+    return res.status(400).json(new ApiResponse(400, {}, "Atleast one field is required"))
   }
 
   const updateQuery = {};
@@ -271,13 +275,13 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   const updatedAvatarLocalPath = req.file.path;
 
   if (!updatedAvatarLocalPath) {
-    throw new ApiError(res, 400, "Avatar file is missing");
+    return res.status(400).json(new ApiResponse(400, {}, "Avatar file is missing"))
   }
 
   const updatedAvatar = await uploadToCloudinary(updatedAvatarLocalPath);
 
   if (!updatedAvatar.url) {
-    throw new ApiError(res, 500, "Failed to upload avatar");
+    return res.status(500).json(new ApiResponse(500, {}, "Failed to upload avatar"))
   }
 
   const oldAvatar = req.user.avatar;
@@ -293,7 +297,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   ).select("-password");
 
   if (!user) {
-    throw new ApiError(res, 500, "Failed to update avatar");
+    return res.status(500).json(new ApiResponse(500, {}, "Failed to upload avatar"))
   }
 
   if (oldAvatar) {
@@ -311,7 +315,7 @@ const checkAuthenicated = asyncHandler(async (req, res) => {
     const token = req.cookies?.accessToken;
   
     if (!token) {
-      throw new ApiError(res, 401, "Unauthorized request");
+      return res.status(401).json(new ApiResponse(401, {}, "Unauthorized request"))
     }
   
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -335,7 +339,9 @@ const checkAuthenicated = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {"authenicated":"true"}))
   } catch (error) {
-    throw new ApiError(res, 401, error?.message || "Invalid access token");
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {"authenticated":"false"}, error?.message || "Invalid Access Token"))
   }
 })
 

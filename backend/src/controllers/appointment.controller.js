@@ -2,6 +2,7 @@ import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { Appointment } from "../models/appointment.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import { Hospital } from "../models/hospital.model.js";
 
 const isDoctorFree = async (doctorId, startTime, endTime) => {
   const overlappingAppointments = await Appointment.find({
@@ -21,7 +22,7 @@ const isDoctorFree = async (doctorId, startTime, endTime) => {
 };
 const requestAppointment = asyncHandler(async (req, res) => {
   if (req.user?.role !== "patient") {
-    throw new ApiError(res, 401, "Unauthorized request");
+    return res.status(401).json(new ApiResponse(401, {}, "Unauthorized request"))
   }
 
   const { doctorId, startTime, endTime, hospitalId } = req.body;
@@ -31,13 +32,13 @@ const requestAppointment = asyncHandler(async (req, res) => {
       (field) => !field || field.trim() == ""
     )
   ) {
-    throw new ApiError(res, 400, "All fields are required");
+    return res.status(400).json(new ApiResponse(400, {}, "All fields are required"))
   }
 
   const isDoctorFreeBoolean = await isDoctorFree(doctorId, startTime, endTime);
 
   if (!isDoctorFreeBoolean) {
-    throw new ApiError(res, 409, "Doctor is not free at this time");
+    return res.status(409).json(new ApiResponse(409, {}, "Doctor is not free at this time"))
   }
 
   const appointment = await Appointment.create({
@@ -50,7 +51,7 @@ const requestAppointment = asyncHandler(async (req, res) => {
   });
 
   if (!appointment) {
-    throw new ApiError(res, 500, "Failed to request appointment");
+    return res.status(500).json(new ApiResponse(500, {}, "Failed to request appointment"))
   }
 
   return res
@@ -62,31 +63,31 @@ const requestAppointment = asyncHandler(async (req, res) => {
 
 const approveOrRejectAppointment = asyncHandler(async (req, res) => {
   if (req.user?.role !== "doctor") {
-    throw new ApiError(res, 403, "Forbidden request", res);
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
   }
 
   const { id: appointmentId, status } = req.params;
 
   if (!appointmentId || !status) {
-    throw new ApiError(res, 400, "Appointment id and status are required");
+    return res.status(400).json(new ApiResponse(400, {}, "Appointment id and status are required"))
   }
 
   if (!(status === "scheduled" || status === "rejected")) {
-    throw new ApiError(res, 400, "Status can only be approved or rejected");
+    return res.status(400).json(new ApiResponse(400, {}, "Status can only be approved or rejected"))
   }
 
   const appointment = await Appointment.findById(appointmentId);
 
   if (!appointment) {
-    throw new ApiError(res, 404, "Appointment not found");
+    return res.status(404).json(new ApiResponse(404, {}, "Appointment not found"))
   }
 
   if (!appointment.doctor.equals(req.user._id)) {
-    throw new ApiError(res, 403, "Forbidden request");
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
   }
 
   if (appointment.status !== "pending") {
-    throw new ApiError(res, 409, `Appointment already ${appointment.status}`);
+    return res.status(409).json(new ApiResponse(409, {}, `Appointment already ${appointment.status}`))
   }
 
   if (
@@ -103,42 +104,42 @@ const approveOrRejectAppointment = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, appointment, `Appointment ${status}`));
   } else {
-    throw new ApiError(res, 409, "Doctor is not free at this time");
+    return res.status(409).json(new ApiResponse(409, {}, "Doctor is not free at this time"))
   }
 });
 
 const rescheduleAppointment = asyncHandler(async (req, res) => {
   if (req.user?.role !== "doctor") {
-    throw new ApiError(res, 403, "Forbidden request");
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
   }
   const { startTime, endTime } = req.body;
 
   if (!startTime && !endTime) {
-    throw new ApiError(res, 400, "All fields are required");
+    return res.status(400).json(new ApiResponse(400, {}, "All fields are required"))
   }
 
   const appointmentId = req.params?.id;
 
   if (!appointmentId) {
-    throw new ApiError(res, 400, "Appointment id is required");
+    return res.status(400).json(new ApiResponse(400, {}, "Appointment id is required"))
   }
 
   const appointment = await Appointment.findById(appointmentId);
 
   if (!appointment) {
-    throw new ApiError(res, 404, "Appointment not found");
+    return res.status(404).json(new ApiResponse(404, {}, "Appointment not found"))
   }
 
   if (!appointment.doctor.equals(req.user._id)) {
-    throw new ApiError(res, 403, "Forbidden request");
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
   }
 
   if (appointment.status !== "scheduled") {
-    throw new ApiError(res, 409, "Appointment has to be scheduled first");
+    return res.status(409).json(new ApiResponse(409, {}, "Appointment has to be scheduled first"))
   }
 
-  if (!isDoctorFree(req.user._id, startTime, endTime)) {
-    throw new ApiError(res, 409, "Doctor is not free at this time");
+  if (!(await isDoctorFree(req.user._id, startTime, endTime))) {
+    return res.status(409).json(new ApiResponse(409, {}, "Doctor is not free at this time"))
   }
   appointment.status = "rescheduled";
   appointment.startTime = startTime;
@@ -161,7 +162,7 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
   const userId = _id;
 
   if (role !== "patient" && role !== "doctor") {
-    throw new ApiError(res, 403, "Forbidden request");
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
   }
 
   const pipeline = [
@@ -239,7 +240,7 @@ const updateAppointment = asyncHandler(async (req, res) => {
   const { role } = req.user 
 
   if (!appointmentId) {
-    throw new ApiError(res, 400, "Appointment id is required");
+    return res.status(400).json(new ApiResponse(400, {}, "Appointment id is required"))
   }
 
   //only doctor should be able to add description
@@ -247,7 +248,7 @@ const updateAppointment = asyncHandler(async (req, res) => {
     const { description } = req.body;
 
     if (!description) {
-      throw new ApiError(res, 400, "All fields are required");
+      return res.status(400).json(new ApiResponse(400, {}, "Description is required"))
     }
   
     const updatedAppointment = await Appointment.findByIdAndUpdate(
@@ -261,7 +262,7 @@ const updateAppointment = asyncHandler(async (req, res) => {
     );
   
     if (!updatedAppointment) {
-      throw new ApiError(res, 404, "Appointment not found");
+      return res.status(404).json(new ApiResponse(404, {}, "Appointment not found"))
     }
   
     return res
@@ -279,31 +280,35 @@ const updateAppointment = asyncHandler(async (req, res) => {
     const appointment = await Appointment.findById(appointmentId)
 
     if (!appointment) {
-      throw new ApiError(res, 404, "Appointment not found")
+      return res.status(404).json(new ApiResponse(404, {}, "Appointment not found"))
     }
 
     if (appointment.status!=="pending"){
-      throw new ApiError(res, 400, `Appointment already ${appointment.status}`)
+      return res.status(400).json(new ApiResponse(400, {}, `Appointment already ${appointment.status}`))
     }
+
+    const { doctor, hospital, startTime, endTime} = req.body
+
+    const fields = { doctor, hospital, startTime, endTime };
 
     const updateFields = {};
 
-    for (const [key, value] of Object.entries(req.body)) {
-      if (value !== undefined && value !== null && value !=="" ) {
-        updateFields[key] = value;
+    for (const [key, value] of Object.entries(fields)) {
+        if (value !== "") {
+            updateFields[key] = value;
+        }
+    }
+
+    if ("doctor" in updateFields) {
+      const hospital = Hospital.findById(updateFields.hospital);
+
+      if (!hospital.doctors.includes(updateFields.doctor)) {
+        return res.status(400).json(new ApiResponse(400, {}, "Doctor doesn't belong to this hospital"))
       }
     }
 
-    if ("description" in updateFields){
-      delete updateFields.description
-    }
-  
-    if (Object.keys(updateFields).length === 0) {
-      throw new ApiError(res, 400, "No fields to update provided");
-    }
-
     Object.assign(appointment, updateFields);
-    
+
     await appointment.save({ validateBeforeSave: false });
   
     return res
@@ -317,7 +322,7 @@ const updateAppointment = asyncHandler(async (req, res) => {
       ); 
   }
   else {
-    throw new ApiError(res, 403, "Forbidden request")
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
   }
 
 });
@@ -326,13 +331,13 @@ const deleteAppointment = asyncHandler(async (req, res) => {
   const { id: appointmentId } = req.params;
 
   if (!appointmentId) {
-    throw new ApiError(400, "Appointment id is required");
+    return res.status(400).json(new ApiResponse(400, {}, "Appointment id is required"))
   }
 
   const deletedAppointment = await Appointment.findByIdAndDelete(appointmentId);
 
   if (!deletedAppointment) {
-    throw new ApiError(404, "Appointment not found");
+    return res.status(404).json(new ApiResponse(404, {}, "Appointment not found"))
   }
 
   return res
