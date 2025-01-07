@@ -1,4 +1,3 @@
-import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
@@ -11,15 +10,15 @@ const createScanRequest = asyncHandler(async (req, res) => {
   }
   const { scanCentre, description, appointment } = req.body;
 
-  if (
-    [scanCentre, description, appointment].some(
-      (field) => !field || field.trim() == ""
-    )
-  ) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, {}, "All fields are required"));
-  }
+  // if (
+  //   [scanCentre, description, appointment].some(
+  //     (field) => !field || field.trim() == ""
+  //   )
+  // ) {
+  //   return res
+  //     .status(400)
+  //     .json(new ApiResponse(400, {}, "All fields are required"));
+  // }
 
   const appointmentObject = await Appointment.findById(appointment);
 

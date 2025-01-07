@@ -9,10 +9,13 @@ import {
 } from "../controllers/scanRequest.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import { validate } from "../middlewares/validator.middleware.js";
+import { createScanRequestSchema, updateScanRequestSchema } from "../schemas/scanRequest.schema.js";
+
 const router = Router();
 
 router.route("/").get(verifyJWT, getScanRequests);
-router.route("/").post(verifyJWT, createScanRequest);
+router.route("/").post(verifyJWT, validate(createScanRequestSchema), createScanRequest);
 router
   .route("/:id/complete")
   .post(verifyJWT, upload.single("scanDocument"), completeScanRequest);
@@ -23,6 +26,6 @@ router
 
 router
   .route("/:id")
-  .patch(verifyJWT, upload.single("scanDocument"), updateScanRequest);
+  .patch(verifyJWT, upload.single("scanDocument"), validate(updateScanRequestSchema) , updateScanRequest);
 
 export default router;

@@ -280,7 +280,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email, gender, address, specialization } = req.body;
-  if (!fullName && !email && !gender && !address) {
+  if (!fullName && !email && !gender && !address && !specialization) {
     return res
       .status(400)
       .json(new ApiResponse(400, {}, "Atleast one field is required"));
@@ -296,7 +296,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     }
   }
 
-  if (user.role === "doctor" && updateData.specialization) {
+  if (req.user.role === "doctor" && updateData.specialization) {
     updateQuery.specialization = specialization;
   }
 
@@ -306,7 +306,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       $set: updateQuery,
     },
     { new: true }
-  ).select("-password");
+  ).select("-password -refreshToken");
 
   return res
     .status(200)
@@ -340,7 +340,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       },
     },
     { new: true }
-  ).select("-password");
+  ).select("-password -refreshToken");
 
   if (!user) {
     return res
