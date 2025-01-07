@@ -2,8 +2,8 @@ import { z } from "zod";
 
 const requestAppointmentSchema = z.object({
   doctorId: z.string(),
-  startTime: z.string().datetime(), 
-  endTime: z.string().datetime(), 
+  startTime: z.string(), 
+  endTime: z.string(), 
   hospitalId: z.string() 
 }).refine(data => {
   if (data.startTime && data.endTime) {
@@ -17,8 +17,8 @@ const requestAppointmentSchema = z.object({
 
 const updateAppointmentSchema = z.object({
   doctorId: z.string().optional(),
-  startTime: z.string().datetime().optional(), 
-  endTime: z.string().datetime().optional(), 
+  startTime: z.string().optional(), 
+  endTime: z.string().optional(), 
   hospitalId: z.string().optional(),
   description: z.string().max(500, { message: "Description must be 500 characters or fewer" }).optional()
 }).refine(data => {
