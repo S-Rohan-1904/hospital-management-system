@@ -288,38 +288,24 @@ const updateAppointment = asyncHandler(async (req, res) => {
 
   //only doctor should be able to add description
   if (role === "doctor") {
-    const { description } = req.body;
+    const appointment = await Appointment.findById(appointmentId);
 
-    if (!description) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Description is required"));
+    const updateFields = {};
+
+    for (const [key, value] of Object.entries(req.body)) {
+      if (value !== "") {
+        updateFields[key] = value;
+      }
     }
 
-    const updatedAppointment = await Appointment.findByIdAndUpdate(
-      appointmentId,
-      {
-        $set: {
-          description,
-        },
-      },
-      { new: true, runValidators: true }
-    );
+    Object.assign(appointment, updateFields);
 
-    if (!updatedAppointment) {
-      return res
-        .status(404)
-        .json(new ApiResponse(404, {}, "Appointment not found"));
-    }
+    await appointment.save({ validateBeforeSave: false });
 
     return res
       .status(200)
       .json(
-        new ApiResponse(
-          200,
-          updatedAppointment,
-          "Appointment updated successfully"
-        )
+        new ApiResponse(200, appointment, "Appointment updated successfully")
       );
   } else if (role === "patient") {
     const appointment = await Appointment.findById(appointmentId);
