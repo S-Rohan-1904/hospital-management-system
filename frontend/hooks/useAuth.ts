@@ -1,8 +1,8 @@
 "use client";
 
-// Ensure this hook runs on the client side
 import axiosInstance from "../utils/axiosInstance";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 enum Role {
   Doctor = "doctor",
@@ -16,6 +16,13 @@ enum Gender {
   Other = "other",
 }
 
+interface LogoutResponse {
+  statusCode: Number;
+  message: string;
+  success: Boolean;
+  data: Object;
+}
+
 interface BaseUser {
   _id: string;
   username: string;
@@ -24,10 +31,10 @@ interface BaseUser {
   avatar: string;
   address: string;
   role: Role;
-  __v: number; // If this is versioning, include it
-  createdAt: string; // You can use Date type, but it's string in the response
-  updatedAt: string; // You can use Date type, but it's string in the response
-  gender?: Gender; // Gender is not provided in your example, but you may include it if necessary
+  __v: number;
+  createdAt: string;
+  updatedAt: string;
+  gender?: Gender;
   googleId?: string;
 }
 
@@ -38,12 +45,11 @@ interface AuthResponseDoctor extends BaseUser {
 
 interface AuthResponseOther extends BaseUser {
   role: Role.Patient | Role.ScanCentre;
-  specialization?: never; // specialization is not allowed for Patient or ScanCentre
+  specialization?: never;
 }
 
 type AuthResponse = AuthResponseDoctor | AuthResponseOther;
 
-// Example of the data structure based on your provided JSON
 interface ApiResponse {
   statusCode: number;
   message: string;
@@ -56,22 +62,46 @@ interface ApiResponse {
 const useAuth = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<AuthResponse | null>(null); // Store current user data
+  const router = useRouter();
 
-  const saveTokensInCookies = (
-    accessToken: string,
-    refreshToken: string,
-    user: any
-  ) => {
-    document.cookie = `accessToken=${accessToken}; path=/; max-age=${
-      60 * 60 * 24
-    }`; // Access token expires in 1 day
-    document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${
-      60 * 60 * 24 * 7
-    }`; // Refresh token expires in 7 days
-    document.cookie = `user=${JSON.stringify(user)}; path=/; max-age=${
-      60 * 60 * 24 * 7
-    }`; // User data expires in 7 days
-  };
+  useEffect(() => {
+    // Check if the user is authenticated by calling the API
+    axiosInstance
+      .get("/users", { withCredentials: true })
+      .then((response) => {
+        setIsAuthenticated(response.data.data.authenticated);
+        setAuthLoading(false);
+        console.log(response.data.data.authenticated);
+
+        if (response.data.data.authenticated) {
+          // Fetch current user data if authenticated
+          axiosInstance
+            .get("/users/current-user", { withCredentials: true })
+            .then((response) => {
+              setCurrentUser(response.data.data.user);
+              console.log("Current User:", response.data.data.user);
+            })
+            .catch((err) => {
+              setError("Failed to fetch current user");
+              console.error(err);
+            });
+        }
+      })
+      .catch(() => {
+        setIsAuthenticated(false);
+        setAuthLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      // Redirect to login if the user is not authenticated
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   // Login Function
   const login = async (email: string, password: string) => {
@@ -79,26 +109,10 @@ const useAuth = () => {
     setError(null);
 
     try {
-      const response = await axiosInstance.post<ApiResponse>(
-        "/users/login",
-        {
-          email,
-          password,
-        },
-        {
-          withCredentials: true,
-        }
-      );
-
-      const { data } = response.data;
-
-      //   const cookieStore = await cookies();
-
-      //   const accessToken = cookieStore.get("accessToken");
-      //   console.log(accessToken);
-
-      // Save tokens in cookies (on the client side)
-      //   saveTokensInCookies(accessToken, refreshToken, user);
+      const response = await axiosInstance.post<ApiResponse>("/users/login", {
+        email,
+        password,
+      });
 
       return response.data;
     } catch (err: any) {
@@ -109,25 +123,14 @@ const useAuth = () => {
   };
 
   // Register Function
-  const register = async (
-    fullName: string,
-    email: string,
-    password: string
-  ) => {
+  const register = async (formData: FormData) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await axiosInstance.post<AuthResponse>("/register", {
-        fullName,
-        email,
-        password,
+      const response = await axiosInstance.post("/users/register", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-
-      //   const { accessToken, refreshToken, user } = response.data;
-
-      // Save tokens in cookies (on the client side)
-      //   saveTokensInCookies(accessToken, refreshToken, user);
 
       return response.data;
     } catch (err: any) {
@@ -137,11 +140,34 @@ const useAuth = () => {
     }
   };
 
+  // Logout Function
+  const logout = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axiosInstance.get<LogoutResponse>(
+        "/users/logout",
+        { withCredentials: true }
+      );
+
+      return response;
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Logout failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     login,
     register,
+    logout,
     loading,
     error,
+    isAuthenticated,
+    authLoading,
+    currentUser,
   };
 };
 

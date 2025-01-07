@@ -82,20 +82,20 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
     id,
     startTime,
     endTime,
-    doctorId,
-    hospitalId,
+    doctor,
+    hospital,
   }) => {
     setLoading(true);
     setError(null);
     try {
-      await axiosInstance.put(
+      await axiosInstance.patch(
         `/appointments/${id}`,
-        { startTime, endTime, doctorId, hospitalId },
+        { startTime, endTime, doctor, hospital },
         {
           withCredentials: true,
         }
       );
-      await fetchAppointments(); // Refresh appointments after update
+      await fetchAppointments();
     } catch (err: any) {
       setError(err.response?.data?.message || "Error updating appointment");
     } finally {
@@ -112,7 +112,7 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
       });
       console.log("deleted successfully");
 
-      await fetchAppointments(); // Refresh appointments after deletion
+      await fetchAppointments();
     } catch (err: any) {
       setError(err.response?.data?.message || "Error deleting appointment");
     } finally {

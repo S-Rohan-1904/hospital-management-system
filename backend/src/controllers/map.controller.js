@@ -25,7 +25,15 @@ async function getAccessToken() {
 
     return { accessToken };
   } catch (error) {
-    return res.status(500).json(new ApiResponse(500, {"error":error.message}, "Error fetching access token"))
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { error: error.message },
+          "Error fetching access token"
+        )
+      );
   }
 }
 
@@ -34,7 +42,15 @@ const getNearbyHospital = asyncHandler(async (req, res) => {
     const accessToken = await getAccessToken();
 
     if (!accessToken) {
-      return res.status(404).json(new ApiResponse(404, {}, "Something went wrong while fetching nearby hospitals"))
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            404,
+            {},
+            "Something went wrong while fetching nearby hospitals"
+          )
+        );
     }
 
     const NearbyHospitals = await axios.get(
@@ -54,7 +70,9 @@ const getNearbyHospital = asyncHandler(async (req, res) => {
     );
 
     if (NearbyHospitals.suggestedLocations.length === 0) {
-      return res.status(500).json(new ApiResponse(500, {}, "Unable to fetch nearby Hospitals"))
+      return res
+        .status(500)
+        .json(new ApiResponse(500, {}, "Unable to fetch nearby Hospitals"));
     }
 
     return res
@@ -67,7 +85,7 @@ const getNearbyHospital = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    return res.status(500).json(new ApiResponse(500, {}, error.message))
+    return res.status(500).json(new ApiResponse(500, {}, error.message));
   }
 });
 
@@ -78,7 +96,7 @@ const getAllHospitals = asyncHandler(async (req, res) => {
   });
 
   if (!hospitals || hospitals.length === 0) {
-    return res.status(404).json(new ApiResponse(404, {}, "No hospital found"))
+    return res.status(404).json(new ApiResponse(404, {}, "No hospital found"));
   }
 
   return res

@@ -1,17 +1,27 @@
-import { Home, Settings, CalendarCheck2, ScrollText } from "lucide-react";
+"use client";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
+import useAuth from "@/hooks/useAuth";
+import { Home, Settings, CalendarCheck2, ScrollText } from "lucide-react";
+import { ChevronUp, User2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Menu items.
 const items = [
@@ -38,6 +48,16 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const { logout } = useAuth();
+  const router = useRouter();
+  const handleSignOut = async () => {
+    const response = await logout();
+    console.log(response);
+    if (response) {
+      console.log(response);
+      router.push("/");
+    }
+  };
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -61,6 +81,29 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton>
+                  <User2 /> Username
+                  <ChevronUp className="ml-auto" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="top"
+                className="w-[--radix-popper-anchor-width]"
+              >
+                <DropdownMenuItem>Account</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

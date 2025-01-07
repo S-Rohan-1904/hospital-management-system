@@ -7,7 +7,7 @@ import { Appointment } from "../models/appointment.model.js";
 
 const createScanRequest = asyncHandler(async (req, res) => {
   if (req.user?.role !== "doctor") {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
   const { scanCentre, description, appointment } = req.body;
 
@@ -16,13 +16,17 @@ const createScanRequest = asyncHandler(async (req, res) => {
       (field) => !field || field.trim() == ""
     )
   ) {
-    return res.status(400).json(new ApiResponse(400, {}, "All fields are required"))
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "All fields are required"));
   }
 
   const appointmentObject = await Appointment.findById(appointment);
 
   if (!appointmentObject) {
-    return res.status(404).json(new ApiResponse(404, {}, "Invalid Appointment"))
+    return res
+      .status(404)
+      .json(new ApiResponse(404, {}, "Invalid Appointment"));
   }
 
   const scanRequest = await ScanRequest.create({
@@ -35,7 +39,9 @@ const createScanRequest = asyncHandler(async (req, res) => {
   });
 
   if (!scanRequest) {
-    return res.status(500).json(new ApiResponse(500, {}, "Failed to create scan request"))
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "Failed to create scan request"));
   }
 
   return res
@@ -45,23 +51,27 @@ const createScanRequest = asyncHandler(async (req, res) => {
 
 const deleteScanRequest = asyncHandler(async (req, res) => {
   if (req.user?.role !== "doctor") {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
   const scanRequestId = req.params?.id;
 
   if (!scanRequestId) {
-    return res.status(400).json(new ApiResponse(400, {}, "Scan request id is required"))
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Scan request id is required"));
   }
 
   const scanRequest = await ScanRequest.findById(scanRequestId);
 
   if (!scanRequest) {
-    return res.status(404).json(new ApiResponse(404, {}, "Scan request not found"))
+    return res
+      .status(404)
+      .json(new ApiResponse(404, {}, "Scan request not found"));
   }
 
   if (!scanRequest.doctor.equals(req.user._id)) {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
   await ScanRequest.deleteOne({ _id: scanRequest._id });
@@ -73,31 +83,43 @@ const deleteScanRequest = asyncHandler(async (req, res) => {
 
 const approveOrRejectScanRequest = asyncHandler(async (req, res) => {
   if (req.user?.role !== "scanCentre") {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
   const { id: scanRequestId, status } = req.params;
 
   if (!scanRequestId && !status) {
-    return res.status(400).json(new ApiResponse(400, {}, "Scan request id and status is required"))
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Scan request id and status is required"));
   }
 
   if (status && status !== "accepted" && status !== "rejected") {
-    return res.status(400).json(new ApiResponse(400, {}, "Status can only be accepted or rejected"))
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(400, {}, "Status can only be accepted or rejected")
+      );
   }
 
   const scanRequest = await ScanRequest.findById(scanRequestId);
 
   if (!scanRequest) {
-    return res.status(404).json(new ApiResponse(404, {}, "Scan request not found"))
+    return res
+      .status(404)
+      .json(new ApiResponse(404, {}, "Scan request not found"));
   }
 
   if (!scanRequest.scanCentre.equals(req.user._id)) {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
   if (scanRequest.status !== "pending") {
-    return res.status(409).json(new ApiResponse(409, {}, `Scan request already ${scanRequest.status}`))
+    return res
+      .status(409)
+      .json(
+        new ApiResponse(409, {}, `Scan request already ${scanRequest.status}`)
+      );
   }
 
   scanRequest.status = status;
@@ -204,19 +226,23 @@ const completeScanRequest = asyncHandler(async (req, res) => {
   const { role } = req.user;
 
   if (role !== "scanCentre") {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
   const scanRequestId = req.params?.id;
 
   if (!scanRequestId) {
-    return res.status(400).json(new ApiResponse(400, {}, "Scan request id is required"))
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Scan request id is required"));
   }
 
   const scanRequest = await ScanRequest.findById(scanRequestId);
 
   if (!scanRequest) {
-    return res.status(404).json(new ApiResponse(404, {}, "Scan request not found"))
+    return res
+      .status(404)
+      .json(new ApiResponse(404, {}, "Scan request not found"));
   }
 
   if (!scanRequest.scanCentre.equals(req.user._id)) {
@@ -224,19 +250,27 @@ const completeScanRequest = asyncHandler(async (req, res) => {
   }
 
   if (scanRequest.status !== "accepted") {
-    return res.status(409).json(new ApiResponse(409, {}, `Scan request already ${scanRequest.status}`))
+    return res
+      .status(409)
+      .json(
+        new ApiResponse(409, {}, `Scan request already ${scanRequest.status}`)
+      );
   }
 
   const scanDocumentLocalPath = req.file?.path;
 
   if (!scanDocumentLocalPath) {
-    return res.status(400).json(new ApiResponse(400, {}, "Scan document is required"))
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Scan document is required"));
   }
 
   const scanDocument = await uploadToCloudinary(scanDocumentLocalPath);
 
   if (!scanDocument) {
-    return res.status(500).json(new ApiResponse(500, {}, "Error uploading scan document"))
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "Error uploading scan document"));
   }
 
   scanRequest.status = "completed";
@@ -259,7 +293,9 @@ const updateScanRequest = asyncHandler(async (req, res) => {
   const scanRequest = await ScanRequest.findById(scanRequestId);
 
   if (!scanRequest) {
-    return res.status(404).json(new ApiResponse(404, {}, "Scan request not found"))
+    return res
+      .status(404)
+      .json(new ApiResponse(404, {}, "Scan request not found"));
   }
 
   if (role === "doctor") {
@@ -271,7 +307,9 @@ const updateScanRequest = asyncHandler(async (req, res) => {
     const updatedScanDocumentLocalPath = req.file?.path;
 
     if (!updatedScanDocumentLocalPath) {
-    return res.status(400).json(new ApiResponse(400, {}, "Scan document is required"))
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Scan document is required"));
     }
 
     const updatedScanDocument = await uploadToCloudinary(
@@ -279,7 +317,9 @@ const updateScanRequest = asyncHandler(async (req, res) => {
     );
 
     if (!updatedScanDocument) {
-      return res.status(500).json(new ApiResponse(500, {}, "Error uploading scan document"))
+      return res
+        .status(500)
+        .json(new ApiResponse(500, {}, "Error uploading scan document"));
     }
 
     const oldScanDocument = scanRequest.scanDocument;
@@ -290,7 +330,7 @@ const updateScanRequest = asyncHandler(async (req, res) => {
       await deleteFromCloudinary(oldScanDocument);
     }
   } else {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"))
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
   const updatedScanRequest = await scanRequest.save({

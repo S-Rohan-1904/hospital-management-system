@@ -16,8 +16,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-// Importing useRouter
-
 export function LoginForm({
   className,
   ...props
@@ -25,16 +23,17 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login, loading, error } = useAuth();
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       // Call the login function (ensure login handles errors and success internally)
-      await login(email, password);
+      const response = await login(email, password);
 
-      // Redirect to /dashboard after a successful login
-      router.push("/dashboard");
+      if (response) {
+        router.push("/dashboard");
+      }
     } catch (error) {
       console.error("Login failed:", error);
       // Handle login failure if needed
@@ -79,6 +78,7 @@ export function LoginForm({
               <Button type="submit" className="w-full">
                 {loading ? "Logging in..." : "Login"}
               </Button>
+              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
               <Button variant="outline" className="w-full">
                 Login with Google
               </Button>

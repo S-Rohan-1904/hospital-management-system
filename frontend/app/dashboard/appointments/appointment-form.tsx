@@ -8,15 +8,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -24,132 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import { add } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { Calendar as CalendarIcon, ClockIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-// const doctors = [
-//   {
-//     _id: "doctor1",
-//     fullName: "Dr. Jane Smith",
-//     email: "jane.smith@example.com",
-//     specialization: "Cardiology",
-//   },
-//   {
-//     _id: "doctor2",
-//     fullName: "Dr. John Doe",
-//     email: "john.doe@example.com",
-//     specialization: "Dermatology",
-//   },
-//   {
-//     _id: "doctor3",
-//     fullName: "Dr. Emily Davis",
-//     email: "emily.davis@example.com",
-//     specialization: "Pediatrics",
-//   },
-//   {
-//     _id: "doctor4",
-//     fullName: "Dr. Michael Lee",
-//     email: "michael.lee@example.com",
-//     specialization: "Endocrinology",
-//   },
-//   {
-//     _id: "doctor5",
-//     fullName: "Dr. Sarah Johnson",
-//     email: "sarah.johnson@example.com",
-//     specialization: "Orthopedics",
-//   },
-//   {
-//     _id: "doctor6",
-//     fullName: "Dr. Michael Brown",
-//     email: "michael.brown@example.com",
-//     specialization: "Neurology",
-//   },
-// ];
-
-// Dummy hospitals with _id and doctors embedded with full info
-// const hospitals = [
-//   {
-//     _id: "hospital1",
-//     name: "City General Hospital",
-//     address: "123 Main Street, New York, NY",
-//     contact: "+1234567890",
-//     location: {
-//       type: "Point",
-//       coordinates: [40.7128, -74.006], // Example coordinates for New York, NY
-//     },
-//     doctors: [
-//       {
-//         _id: "doctor1",
-//         fullName: "Dr. Jane Smith",
-//         email: "jane.smith@example.com",
-//         specialization: "Cardiology",
-//       },
-//       {
-//         _id: "doctor2",
-//         fullName: "Dr. John Doe",
-//         email: "john.doe@example.com",
-//         specialization: "Dermatology",
-//       },
-//       {
-//         _id: "doctor3",
-//         fullName: "Dr. Emily Davis",
-//         email: "emily.davis@example.com",
-//         specialization: "Pediatrics",
-//       },
-//     ],
-//   },
-//   {
-//     _id: "hospital2",
-//     name: "Sunnydale Medical Center",
-//     address: "456 Sunny Ave, Sunnydale, CA",
-//     contact: "+0987654321",
-//     location: {
-//       type: "Point",
-//       coordinates: [34.0522, -118.2437], // Example coordinates for Los Angeles, CA
-//     },
-//     doctors: [
-//       {
-//         _id: "doctor4",
-//         fullName: "Dr. Michael Lee",
-//         email: "michael.lee@example.com",
-//         specialization: "Endocrinology",
-//       },
-//       {
-//         _id: "doctor5",
-//         fullName: "Dr. Sarah Johnson",
-//         email: "sarah.johnson@example.com",
-//         specialization: "Orthopedics",
-//       },
-//     ],
-//   },
-//   {
-//     _id: "hospital3",
-//     name: "Green Valley Hospital",
-//     address: "789 Green Rd, Green Valley, IL",
-//     contact: "+1122334455",
-//     location: {
-//       type: "Point",
-//       coordinates: [41.8781, -87.6298], // Example coordinates for Chicago, IL
-//     },
-//     doctors: [
-//       {
-//         _id: "doctor6",
-//         fullName: "Dr. Michael Brown",
-//         email: "michael.brown@example.com",
-//         specialization: "Neurology",
-//       },
-//     ],
-//   },
-// ];
 
 interface AppointmentFormProps {
   open: boolean;
@@ -259,10 +135,9 @@ export function AppointmentForm({
       toast({
         title: "Error",
         description: "There was an issue with your request. Please try again.",
-        variant: "destructive", // This can be a different variant like 'destructive' for errors
+        variant: "destructive",
       });
       console.error("Error submitting form:", error);
-      // You could add error handling UI here
     }
   }
 

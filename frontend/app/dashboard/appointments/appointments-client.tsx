@@ -188,7 +188,6 @@ export function AppointmentsClient() {
         open={formOpen}
         onOpenChange={setFormOpen}
         appointment={selectedAppointment}
-        // onSubmit={handleSave} // Handle both update and create operations
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -1,14 +1,23 @@
 "use client";
 
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
+import useAuth from "@/hooks/useAuth";
 import { useEffect } from "react";
 
 export default function DashboardPage() {
-  const { appointments, loading, error } = useAppointmentsContext(); // Use the hook
+  const { appointments, loading, error } = useAppointmentsContext();
+  const { isAuthenticated, authLoading, currentUser } = useAuth(); // Access currentUser
 
   useEffect(() => {
-    console.log(appointments);
-  }, [appointments]);
+    if (isAuthenticated) {
+      console.log("Authenticated user:", currentUser);
+    }
+  }, [isAuthenticated, currentUser]);
+
+  // If auth check is still loading, show a loading state
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
 
   // Render loading, error, or appointments based on the state
   if (loading) {
