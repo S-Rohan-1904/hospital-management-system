@@ -10,11 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import useAuth from "@/hooks/useAuth";
+import { useAuthContext } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
+import axiosInstance from "@/utils/axiosInstance";
+import { GoogleLogin } from "@react-oauth/google";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function LoginForm({
   className,
@@ -22,8 +24,17 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, loading, error } = useAuth();
+  const { login, loading, error, setLoading, setError } = useAuthContext();
   const router = useRouter();
+  const { isAuthenticated } = useAuthContext();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState("");
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,7 +50,29 @@ export function LoginForm({
       // Handle login failure if needed
     }
   };
+  const handleGoogleLogin = async (response: any) => {
+    try {
+      setLoading(true);
+      // Send the Google token to the backend for authentication via axios
+      const res = await axiosInstance.get(
+        `/auth/google/callback?code=${response.credential}`,
+        {
+          withCredentials: true, // Make sure cookies are sent with the request
+        }
+      );
 
+      if (res.status === 200) {
+        // On success, redirect to dashboard
+        router.push("/dashboard");
+      } else {
+        setError("Google login failed");
+      }
+    } catch (error) {
+      setError("Google login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className={cn("flex flex-col gap-6 dark", className)} {...props}>
       <Card>
@@ -75,13 +108,14 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
               <Button type="submit" className="w-full">
                 {loading ? "Logging in..." : "Login"}
               </Button>
-              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-              <Button variant="outline" className="w-full">
-                Login with Google
-              </Button>
+              <GoogleLogin
+                onSuccess={handleGoogleLogin}
+                onError={() => setError("Google login failed")}
+              />
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}

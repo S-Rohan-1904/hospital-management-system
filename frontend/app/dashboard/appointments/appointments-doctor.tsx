@@ -1,7 +1,8 @@
 "use client";
 
 import Loading from "../loading";
-import { AppointmentForm } from "./appointment-form";
+import { AppointmentDoctorForm } from "./appointment-doctor-form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +31,7 @@ import {
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
 import { format } from "date-fns";
-import { Calendar, Clock, MoreVertical, Plus } from "lucide-react";
+import { AlertCircle, Calendar, Clock, MoreVertical, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -57,14 +58,20 @@ export interface AppointmentInterface {
   };
 }
 
-export function AppointmentsClient() {
+export function AppointmentsDoctor() {
   const router = useRouter();
-  const { appointments, loading, error, deleteAppointment, fetchAppointments } =
-    useAppointmentsContext();
+  const {
+    appointments,
+    loading,
+    error,
+    fetchAppointments,
+    acceptAppointment,
+    rejectAppointment,
+  } = useAppointmentsContext();
   const { fetchHospitals } = useHospitalsContext();
 
   const [formOpen, setFormOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentInterface | null>(null);
 
@@ -74,43 +81,42 @@ export function AppointmentsClient() {
   }, []);
 
   // Function to handle deleting an appointment
-  async function handleDelete(id: string) {
+  const acceptAppointmentHandler = async (selectedAppointmentId: string) => {
     try {
-      await deleteAppointment(id);
-      setDeleteDialogOpen(false);
-      router.refresh();
-    } catch (err) {
-      console.error("Error deleting appointment:", err);
-      // Handle error (e.g., show notification)
+      const response = await acceptAppointment(selectedAppointmentId);
+      console.log(response);
+    } catch (error) {
+      console.log(error);
     }
-  }
-
+  };
+  const rejectAppointmentHandler = async (selectedAppointmentId: string) => {
+    try {
+      const response = await rejectAppointment(selectedAppointmentId);
+      console.log(response);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   if (loading) {
     return <Loading />;
-  } else if (error) {
-    return <div>Error: {error}</div>;
   }
   return (
     <>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Appointments</h1>
-        <Button
-          onClick={() => {
-            setSelectedAppointment(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Request Appointment
-        </Button>
       </div>
-
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Doctor</TableHead>
-              <TableHead>Hospital</TableHead>
+              <TableHead>Patient</TableHead>
               <TableHead>Date & Time</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[70px]"></TableHead>
@@ -120,11 +126,9 @@ export function AppointmentsClient() {
             {appointments.map((appointment) => (
               <TableRow key={appointment._id}>
                 <TableCell className="font-medium">
-                  {appointment?.doctor?.fullName}
+                  {appointment?.patient?.fullName}
                 </TableCell>
-                <TableCell className="font-medium">
-                  {appointment?.hospital?.name}
-                </TableCell>
+
                 <TableCell>
                   <div className="flex items-center text-muted-foreground">
                     <Calendar className="w-4 h-4 mr-2" />
@@ -155,34 +159,34 @@ export function AppointmentsClient() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="w-4 h-4" />
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedAppointment(appointment);
-                          setFormOpen(true);
-                        }}
-                      >
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => {
-                          setSelectedAppointment(appointment);
-                          setDeleteDialogOpen(true);
-                        }}
-                        disabled={appointment.status !== "pending"}
-                      >
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button
+                    variant="default"
+                    className="bg-green-400 hover:bg-green-500"
+                    onClick={() => acceptAppointmentHandler(appointment._id)}
+                    disabled={appointment.status !== "pending"}
+                  >
+                    Approve
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="destructive"
+                    onClick={() => rejectAppointmentHandler(appointment._id)}
+                    disabled={appointment.status !== "pending"}
+                  >
+                    Reject
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      setSelectedAppointment(appointment);
+                      setFormOpen(true);
+                    }}
+                  >
+                    Update Appointment
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -190,33 +194,11 @@ export function AppointmentsClient() {
         </Table>
       </div>
 
-      <AppointmentForm
+      <AppointmentDoctorForm
         open={formOpen}
         onOpenChange={setFormOpen}
         appointment={selectedAppointment}
       />
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this appointment.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() =>
-                selectedAppointment && handleDelete(selectedAppointment._id)
-              }
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

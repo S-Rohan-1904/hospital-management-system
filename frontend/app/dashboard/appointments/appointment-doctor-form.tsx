@@ -2,6 +2,7 @@
 
 import { AppointmentInterface } from "@/app/dashboard/appointments/appointments-client";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
 import { useToast } from "@/hooks/use-toast";
@@ -32,14 +34,12 @@ interface AppointmentFormProps {
   appointment?: AppointmentInterface | null;
 }
 
-export function AppointmentForm({
+export function AppointmentDoctorForm({
   open,
   onOpenChange,
   appointment = null,
 }: AppointmentFormProps) {
-  const { hospitals } = useHospitalsContext();
-
-  const { requestAppointment, updateAppointment } = useAppointmentsContext();
+  const { updateDoctorAppointment } = useAppointmentsContext();
   const [startDate, setStartDate] = useState<string>(
     format(
       toZonedTime(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone),
@@ -59,6 +59,8 @@ export function AppointmentForm({
 
   const [selectedHospital, setSelectedHospital] = useState<string>("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+
   const { toast } = useToast();
 
   const handleSelectChangeHospital = (value) => {
@@ -104,23 +106,15 @@ export function AppointmentForm({
   async function handleSubmit() {
     try {
       if (appointment) {
-        await updateAppointment({
+        await updateDoctorAppointment({
           id: appointment._id,
           startTime: startDate,
           endTime: endDate,
-          doctor: selectedDoctor,
-          hospital: selectedHospital,
+          description,
         });
-      } else {
-        await requestAppointment({
-          startTime: startDate,
-          endTime: endDate,
-          doctorId: selectedDoctor,
-          hospitalId: selectedHospital,
-        });
-
-        console.log("appointment request created");
       }
+      console.log("appointment updated");
+
       router.refresh();
       onOpenChange(false);
     } catch (error) {
@@ -136,13 +130,8 @@ export function AppointmentForm({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby="-description">
-        <DialogHeader>
-          <DialogTitle>
-            {appointment ? "Edit Appointment" : "Create Appointment"}
-          </DialogTitle>
-        </DialogHeader>
         <form action={handleSubmit} className="space-y-4" id="-description">
-          <div className="space-y-2 w-[45%]">
+          <div className="space-y-2 w-[75%]">
             <Label htmlFor="start-date">Start Date & Time</Label>
             <Input
               id="start-date"
@@ -154,7 +143,7 @@ export function AppointmentForm({
             />
           </div>
 
-          <div className="space-y-2 w-[45%]">
+          <div className="space-y-2 w-[75%]">
             <Label htmlFor="end-date">End Date & Time</Label>
             <Input
               id="end-date"
@@ -165,62 +154,23 @@ export function AppointmentForm({
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
-          <div className="space-y-2 w-[45%]">
-            <Label htmlFor="hospital">Hospital</Label>
-            <Select
-              name="hospital"
-              value={selectedHospital}
-              onValueChange={(value) => handleSelectChangeHospital(value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pick a hospital" />
-              </SelectTrigger>
 
-              <SelectContent>
-                {hospitals.map((hospital, index) => (
-                  <SelectItem value={hospital._id} key={index}>
-                    {hospital.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2 w-[45%]">
-            <Label htmlFor="doctor">Doctor</Label>
-            <Select
-              name="doctor"
-              value={selectedDoctor}
-              onValueChange={handleSelectChangeDoctor}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pick a doctor" />
-              </SelectTrigger>
-
-              <SelectContent>
-                {hospitals
-                  .filter((hospital) => hospital._id === selectedHospital)
-                  .map((hospital) =>
-                    hospital.doctors.map((doctor, index) => (
-                      <SelectItem value={doctor._id} key={index}>
-                        {doctor.fullName}
-                      </SelectItem>
-                    ))
-                  )}
-              </SelectContent>
-            </Select>
+          <div className="space-y-2 w-[75%]">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              required
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
 
           <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={[
-                selectedHospital,
-                selectedDoctor,
-                startDate,
-                endDate,
-              ].some((x) => x === "")}
+              disabled={[startDate, endDate].some((x) => x === "")}
             >
-              {appointment ? "Update" : "Create"}
+              Update
             </Button>
           </div>
         </form>
