@@ -184,6 +184,7 @@ export function AppointmentsDoctor() {
                       setSelectedAppointment(appointment);
                       setFormOpen(true);
                     }}
+                    disabled={appointment.status !== "scheduled"}
                   >
                     Update Appointment
                   </Button>

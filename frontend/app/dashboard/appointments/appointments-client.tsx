@@ -2,6 +2,7 @@
 
 import Loading from "../loading";
 import { AppointmentForm } from "./appointment-form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +31,7 @@ import {
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
 import { format } from "date-fns";
-import { Calendar, Clock, MoreVertical, Plus } from "lucide-react";
+import { AlertCircle, Calendar, Clock, MoreVertical, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -80,20 +81,19 @@ export function AppointmentsClient() {
       setDeleteDialogOpen(false);
       router.refresh();
     } catch (err) {
-      console.error("Error deleting appointment:", err);
+      console.error("Error:", err);
       // Handle error (e.g., show notification)
     }
   }
 
   if (loading) {
     return <Loading />;
-  } else if (error) {
-    return <div>Error: {error}</div>;
   }
   return (
     <>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Appointments</h1>
+
         <Button
           onClick={() => {
             setSelectedAppointment(null);
@@ -104,6 +104,13 @@ export function AppointmentsClient() {
           Request Appointment
         </Button>
       </div>
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="rounded-md border">
         <Table>
