@@ -119,6 +119,8 @@ export function AppointmentForm({
           hospitalId: selectedHospital,
         });
 
+        console.log(startDate, endDate);
+
         console.log("appointment request created");
       }
       router.refresh();

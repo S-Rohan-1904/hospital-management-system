@@ -130,6 +130,9 @@ export function AppointmentDoctorForm({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby="-description">
+        <DialogHeader>
+          <DialogTitle>Update Appointment</DialogTitle> {/* Dialog title */}
+        </DialogHeader>
         <form action={handleSubmit} className="space-y-4" id="-description">
           <div className="space-y-2 w-[75%]">
             <Label htmlFor="start-date">Start Date & Time</Label>
@@ -155,15 +158,16 @@ export function AppointmentDoctorForm({
             />
           </div>
 
-          <div className="space-y-2 w-[75%]">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              required
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
+          {appointment.status === "scheduled" && (
+            <div className="space-y-2 w-[75%]">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+          )}
 
           <div className="flex justify-end">
             <Button
