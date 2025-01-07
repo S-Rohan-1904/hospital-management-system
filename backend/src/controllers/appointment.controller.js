@@ -110,6 +110,15 @@ const approveOrRejectAppointment = asyncHandler(async (req, res) => {
       );
   }
 
+  if (status==="rejected") {
+    appointment.status = status;
+    await appointment.save({ validateBeforeSave: false });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, appointment, `Appointment ${status}`));
+  }
+
   if (
     await isDoctorFree(
       appointment.doctor,
@@ -364,7 +373,14 @@ const updateAppointment = asyncHandler(async (req, res) => {
 });
 
 const deleteAppointment = asyncHandler(async (req, res) => {
+  const user = req.user;
   const { id: appointmentId } = req.params;
+
+  if (user.role!=="patient") {
+    return res
+    .status(403)
+    .json(new ApiResponse(403, {}, "Forbidden request"));
+  }
 
   if (!appointmentId) {
     return res
@@ -372,7 +388,13 @@ const deleteAppointment = asyncHandler(async (req, res) => {
       .json(new ApiResponse(400, {}, "Appointment id is required"));
   }
 
-  const deletedAppointment = await Appointment.findByIdAndDelete(appointmentId);
+  const appointment = await Appointment.findById(appointmentId);
+
+  if (appointment.status!=="pending") {
+    return res
+    .status(409)
+    .json(new ApiResponse(409, {}, "Cannot delete appointment.Appointment already scheduled"));
+  }
 
   if (!deletedAppointment) {
     return res
