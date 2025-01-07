@@ -19,7 +19,11 @@ const router = Router();
 
 router
   .route("/register")
-  .post(upload.fields([{ name: "avatar", maxCount: 1 }]), validate(registerUserSchema),  registerUser);
+  .post(
+    upload.fields([{ name: "avatar", maxCount: 1 }]),
+    validate(registerUserSchema),
+    registerUser
+  );
 
 router.route("/login").post(validate(loginUserSchema), loginUser);
 router.route("/logout").get(verifyJWT, logoutUser);

@@ -337,8 +337,6 @@ const updateAppointment = asyncHandler(async (req, res) => {
       }
     }
 
-    console.log(updateFields);
-
     if ("doctor" in updateFields) {
       const hospital = await Hospital.findById(updateFields.hospital);
 

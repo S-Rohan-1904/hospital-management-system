@@ -4,7 +4,10 @@ const usernameSchema = z
   .string()
   .min(3, "Username must be at least 3 characters long.")
   .max(20, "Username must not exceed 20 characters.")
-  .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores.");
+  .regex(
+    /^[a-zA-Z0-9_]+$/,
+    "Username can only contain letters, numbers, and underscores."
+  );
 
 const passwordSchema = z
   .string()
@@ -13,17 +16,21 @@ const passwordSchema = z
   .regex(/[A-Z]/, "Password must contain at least one uppercase letter.")
   .regex(/[a-z]/, "Password must contain at least one lowercase letter.")
   .regex(/\d/, "Password must contain at least one digit.")
-  .regex(/[@$!%*?&]/, "Password must contain at least one special character (@, $, !, %, *, ?, &).");
+  .regex(
+    /[@$!%*?&]/,
+    "Password must contain at least one special character (@, $, !, %, *, ?, &)."
+  );
 
 export const registerUserSchema = z.object({
-        username: usernameSchema,
-        email: z.string().email(),
-        password: passwordSchema,
-        fullName: z.string()
-        .min(3, "Full name must be at least 3 characters long.")
-        .max(20, "Full name must not exceed 20 characters"),
-        role: z.enum(["doctor", "patient", "scanCentre"]),
-        address: z.string().min(10,"Address cannot be empty"),
-        gender: z.enum(["male", "female", "other"]),
-        specialization: z.string(),
-  });
+  username: usernameSchema,
+  email: z.string().email(),
+  password: passwordSchema,
+  fullName: z
+    .string()
+    .min(3, "Full name must be at least 3 characters long.")
+    .max(20, "Full name must not exceed 20 characters"),
+  role: z.enum(["doctor", "patient", "scanCentre"]),
+  address: z.string().min(10, "Address cannot be empty"),
+  gender: z.enum(["male", "female", "other"]),
+  specialization: z.string(),
+});
