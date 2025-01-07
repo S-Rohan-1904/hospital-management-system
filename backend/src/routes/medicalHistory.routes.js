@@ -7,11 +7,18 @@ import {
   deleteMedicalHistory,
 } from "../controllers/medicalHistory.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validator.middleware.js";
+import { 
+  createMedicalHistorySchema, 
+  getMedicalHistorySchema, 
+  updateMedicalHistorySchema,
+} from "../schemas/medicalHistory.schema.js";
+
 const router = Router();
 
-router.route("/").get(verifyJWT, getMedicalHistories);
+router.route("/").get(verifyJWT, validate(getMedicalHistorySchema), getMedicalHistories);
 router.route("/:id").get(verifyJWT, getMedicalHistoryById);
-router.route("/").post(verifyJWT, createMedicalHistory);
-router.route("/:id").patch(verifyJWT, updateMedicalHistory);
+router.route("/").post(verifyJWT, validate(createMedicalHistorySchema), createMedicalHistory);
+router.route("/:id").patch(verifyJWT, validate(updateMedicalHistorySchema), updateMedicalHistory);
 router.route("/:id").delete(verifyJWT, deleteMedicalHistory);
 export default router;

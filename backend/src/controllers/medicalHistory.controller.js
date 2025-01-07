@@ -52,19 +52,19 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
     description,
   } = req.body;
 
-  if (
-    !patient ||
-    !doctor ||
-    !hospital ||
-    !startDate ||
-    !endDate ||
-    !diagnosis ||
-    !description
-  ) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, {}, "All required fields must be provided"));
-  }
+  // if (
+  //   !patient ||
+  //   !doctor ||
+  //   !hospital ||
+  //   !startDate ||
+  //   !endDate ||
+  //   !diagnosis ||
+  //   !description
+  // ) {
+  //   return res
+  //     .status(400)
+  //     .json(new ApiResponse(400, {}, "All required fields must be provided"));
+  // }
 
   if (req.user?.role !== "doctor") {
     return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));

@@ -110,6 +110,15 @@ const approveOrRejectAppointment = asyncHandler(async (req, res) => {
       );
   }
 
+  if (status==="rejected") {
+    appointment.status = status;
+    await appointment.save({ validateBeforeSave: false });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, appointment, `Appointment ${status}`));
+  }
+
   if (
     await isDoctorFree(
       appointment.doctor,
@@ -279,38 +288,30 @@ const updateAppointment = asyncHandler(async (req, res) => {
 
   //only doctor should be able to add description
   if (role === "doctor") {
-    const { description } = req.body;
+    const appointment = await Appointment.findById(appointmentId);
 
-    if (!description) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Description is required"));
+    const updateFields = {};
+
+    for (const [key, value] of Object.entries(req.body)) {
+      if (value !== "") {
+        updateFields[key] = value;
+      }
     }
 
-    const updatedAppointment = await Appointment.findByIdAndUpdate(
-      appointmentId,
-      {
-        $set: {
-          description,
-        },
-      },
-      { new: true, runValidators: true }
-    );
+    if ('startTime' in updateFields && 'endTime' in updateFields) {
+      if (updateFields.startTime!==startTime || updateFields.endTime!==endTime){
+        updateFields.status = "rescheduled";
+      }
+    } 
 
-    if (!updatedAppointment) {
-      return res
-        .status(404)
-        .json(new ApiResponse(404, {}, "Appointment not found"));
-    }
+    Object.assign(appointment, updateFields);
+
+    await appointment.save({ validateBeforeSave: false });
 
     return res
       .status(200)
       .json(
-        new ApiResponse(
-          200,
-          updatedAppointment,
-          "Appointment updated successfully"
-        )
+        new ApiResponse(200, appointment, "Appointment updated successfully")
       );
   } else if (role === "patient") {
     const appointment = await Appointment.findById(appointmentId);
@@ -336,8 +337,6 @@ const updateAppointment = asyncHandler(async (req, res) => {
         updateFields[key] = value;
       }
     }
-
-    console.log(updateFields);
 
     if ("doctor" in updateFields) {
       const hospital = await Hospital.findById(updateFields.hospital);
@@ -366,7 +365,14 @@ const updateAppointment = asyncHandler(async (req, res) => {
 });
 
 const deleteAppointment = asyncHandler(async (req, res) => {
+  const user = req.user;
   const { id: appointmentId } = req.params;
+
+  if (user.role!=="patient") {
+    return res
+    .status(403)
+    .json(new ApiResponse(403, {}, "Forbidden request"));
+  }
 
   if (!appointmentId) {
     return res
@@ -374,13 +380,21 @@ const deleteAppointment = asyncHandler(async (req, res) => {
       .json(new ApiResponse(400, {}, "Appointment id is required"));
   }
 
-  const deletedAppointment = await Appointment.findByIdAndDelete(appointmentId);
+  const appointment = await Appointment.findById(appointmentId);
 
-  if (!deletedAppointment) {
+  if (appointment.status!=="pending") {
+    return res
+    .status(409)
+    .json(new ApiResponse(409, {}, "Cannot delete appointment.Appointment already scheduled"));
+  }
+
+  if (!appointment) {
     return res
       .status(404)
       .json(new ApiResponse(404, {}, "Appointment not found"));
   }
+
+  const deletedAppointment = await Appointment.findByIdAndDelete(appointmentId);
 
   return res
     .status(200)

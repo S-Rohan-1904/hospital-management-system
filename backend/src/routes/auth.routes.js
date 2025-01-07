@@ -40,7 +40,7 @@ router
             )
           );
       } catch (error) {
-        return res.status(500).json(new ApiResponse(500, {}, error.message))
+        return res.status(500).json(new ApiResponse(500, {}, error.message));
       }
     }
   );
