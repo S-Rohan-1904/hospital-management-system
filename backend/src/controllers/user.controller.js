@@ -128,7 +128,7 @@ const loginUser = asyncHandler(async (req, res) => {
       httpOnly: true,
       secure: true,
     };
-    res
+    return res
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
@@ -140,7 +140,7 @@ const loginUser = asyncHandler(async (req, res) => {
         )
       );
       } catch (error) {
-    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while generating referesh and access token"))
+          return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while generating refresh and access token"))
   }
 });
 
