@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthContext } from "@/context/AuthContext";
 import axiosInstance from "@/utils/axiosInstance";
 import {
   createContext,
@@ -42,6 +43,8 @@ export const HospitalsProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { isAuthenticated } = useAuthContext();
+
   const fetchHospitals = async () => {
     setLoading(true);
     setError(null);
@@ -49,6 +52,7 @@ export const HospitalsProvider = ({ children }: { children: ReactNode }) => {
       const response = await axiosInstance.get("/hospital/", {
         withCredentials: true,
       });
+
       setHospitals(response.data.data);
     } catch (err: any) {
       setError(err.response?.data?.message || "Error fetching hospitals");

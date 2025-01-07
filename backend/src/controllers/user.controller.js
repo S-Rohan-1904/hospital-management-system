@@ -363,9 +363,7 @@ const checkAuthenicated = asyncHandler(async (req, res) => {
     const token = req.cookies?.accessToken;
 
     if (!token) {
-      return res
-        .status(401)
-        .json(new ApiResponse(401, {}, "Unauthorized request"));
+      return res.json({ authenticated: false });
     }
 
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -375,28 +373,18 @@ const checkAuthenicated = asyncHandler(async (req, res) => {
     );
 
     if (!user) {
-      return res
-        .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            { authenticated: "false" },
-            "Invalid Access Token"
-          )
-        );
+      return res.json({ authenticated: false });
     }
 
-    return res
-      .status(200)
-      .json(new ApiResponse(200, { authenticated: "true" }));
+    return res.json({ authenticated: true });
   } catch (error) {
     return res
-      .status(200)
+      .status(500)
       .json(
         new ApiResponse(
-          200,
-          { authenticated: "false" },
-          error?.message || "Invalid Access Token"
+          500,
+          {},
+          error?.message || "Something went wrong while checking authentication"
         )
       );
   }

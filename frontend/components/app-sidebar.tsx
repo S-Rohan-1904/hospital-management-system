@@ -17,7 +17,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import useAuth from "@/hooks/useAuth";
+import { useAppointmentsContext } from "@/context/AppointmentsContext";
+import { useAuthContext } from "@/context/AuthContext";
+import { useHospitalsContext } from "@/context/HospitalsContext";
 import { Home, Settings, CalendarCheck2, ScrollText } from "lucide-react";
 import { ChevronUp, User2 } from "lucide-react";
 import Link from "next/link";
@@ -48,14 +50,18 @@ const items = [
 ];
 
 export function AppSidebar() {
-  const { logout } = useAuth();
+  const { setAppointments } = useAppointmentsContext();
+  const { setHospitals } = useHospitalsContext();
+  const { logout } = useAuthContext();
   const router = useRouter();
   const handleSignOut = async () => {
-    const response = await logout();
-    console.log(response);
-    if (response) {
-      console.log(response);
+    try {
+      await logout();
+      setAppointments([]);
+      setHospitals([]);
       router.push("/");
+    } catch (error) {
+      console.log(error);
     }
   };
   return (

@@ -5,38 +5,58 @@ const axiosInstance = axios.create({
   withCredentials: true, // Include cookies by default
 });
 
-// Add interceptor to handle token refresh
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+const onRefreshed = (token: string) => {
+  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers = [];
+};
+
 axiosInstance.interceptors.response.use(
-  (response) => response, // Return response if successful
+  (response) => response, // Pass through successful responses
   async (error) => {
     const originalRequest = error.config;
 
-    // Check if the error is due to token expiration
+    // If the error is due to an expired token
     if (
       error.response?.status === 401 &&
-      !originalRequest._retry // Prevent infinite loops
+      !originalRequest._retry &&
+      originalRequest.url !== "/users/refresh-token"
     ) {
       originalRequest._retry = true;
 
-      try {
-        // Attempt to refresh the token
-        const refreshResponse = await axiosInstance.post(
-          "/users/refresh-token",
-          null,
-          {
-            withCredentials: true, // Include the refreshToken cookie
-          }
-        );
+      if (!isRefreshing) {
+        isRefreshing = true;
 
-        // Retry the original request after refreshing the token
-        return axiosInstance(originalRequest);
-      } catch (refreshError) {
-        console.error("Error refreshing token:", refreshError);
-        throw refreshError;
+        try {
+          const refreshResponse = await axiosInstance.post(
+            "/users/refresh-token",
+            null,
+            { withCredentials: true }
+          );
+
+          const newToken = refreshResponse.data.token;
+
+          onRefreshed(newToken);
+          isRefreshing = false;
+
+          return axiosInstance(originalRequest);
+        } catch (refreshError) {
+          isRefreshing = false;
+          console.error("Token refresh failed:", refreshError);
+        }
+      } else {
+        return new Promise((resolve) => {
+          refreshSubscribers.push((token: string) => {
+            originalRequest.headers["Authorization"] = `Bearer ${token}`;
+            resolve(axiosInstance(originalRequest));
+          });
+        });
       }
     }
 
-    throw error;
+    return Promise.reject(error);
   }
 );
 

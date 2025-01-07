@@ -1,6 +1,5 @@
 "use client";
 
-import useAuth from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,19 +18,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuthContext } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-// Import your useAuth hook
+// Import your useAuthContext hook
 
 export function RegisterForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
-  const { register, loading, error } = useAuth();
+  const { register, loading, error } = useAuthContext();
   const [role, setRole] = useState<string>("");
   const [avatar, setAvatar] = useState<File | null>(null);
 
@@ -51,7 +51,7 @@ export function RegisterForm({
     }
 
     try {
-      const response = await register(formData); // Use the `register` function from `useAuth`
+      const response = await register(formData); // Use the `register` function from `useAuthContext`
       if (response) {
         router.push("/");
       }

@@ -1,6 +1,8 @@
 import { AppointmentsProvider } from "../context/AppointmentsContext";
 import { HospitalsProvider } from "../context/HospitalsContext";
+import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function RootLayout({
   children,
@@ -15,9 +17,13 @@ export default function RootLayout({
         <title>Hospital Management System</title>
       </head>
       <body>
-        <HospitalsProvider>
-          <AppointmentsProvider>{children}</AppointmentsProvider>
-        </HospitalsProvider>
+        <GoogleOAuthProvider clientId="117839731186-0vl1vchrk5on1bol3mledra6840ckvbd.apps.googleusercontent.com">
+          <AuthProvider>
+            <HospitalsProvider>
+              <AppointmentsProvider>{children}</AppointmentsProvider>
+            </HospitalsProvider>
+          </AuthProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

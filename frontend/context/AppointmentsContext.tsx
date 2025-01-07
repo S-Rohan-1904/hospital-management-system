@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthContext } from "@/context/AuthContext";
 import axiosInstance from "@/utils/axiosInstance";
 import {
   createContext,
@@ -41,8 +42,8 @@ interface AppointmentsContextType {
     id,
     startTime,
     endTime,
-    doctorId,
-    hospitalId,
+    doctor,
+    hospital,
   }) => Promise<void>;
   deleteAppointment: (id: string) => Promise<void>;
   setAppointments: (appointments: Appointment[]) => void;
@@ -52,6 +53,14 @@ interface AppointmentsContextType {
     endTime,
     hospitalId,
   }) => Promise<void>;
+  acceptAppointment: (id: string) => Promise<void>;
+  rejectAppointment: (id: string) => Promise<void>;
+  updateDoctorAppointment: ({
+    id,
+    startTime,
+    endTime,
+    description,
+  }) => Promise<void>;
 }
 
 const AppointmentsContext = createContext<AppointmentsContextType | undefined>(
@@ -59,6 +68,7 @@ const AppointmentsContext = createContext<AppointmentsContextType | undefined>(
 );
 
 export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated } = useAuthContext();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,11 +76,14 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
   const fetchAppointments = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const response = await axiosInstance.get("/appointments/", {
-        withCredentials: true,
-      });
-      setAppointments(response.data.data);
+      if (isAuthenticated) {
+        const response = await axiosInstance.get("/appointments/", {
+          withCredentials: true,
+        });
+        setAppointments(response.data.data);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "Error fetching appointments");
     } finally {
@@ -144,9 +157,65 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const acceptAppointment = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await axiosInstance.patch(`/appointments/${id}/scheduled`, {
+        withCredentials: true,
+      });
+      await fetchAppointments();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error accepting appointment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const rejectAppointment = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await axiosInstance.patch(`/appointments/${id}/rejected`, {
+        withCredentials: true,
+      });
+      await fetchAppointments();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error rejecting appointment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateDoctorAppointment = async ({
+    id,
+    startTime,
+    endTime,
+    description,
+  }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await axiosInstance.patch(
+        `/appointments/${id}`,
+        { startTime, endTime, description },
+        {
+          withCredentials: true,
+        }
+      );
+      await fetchAppointments();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error updating appointment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchAppointments();
-  }, []);
+    if (isAuthenticated) {
+      fetchAppointments();
+    }
+  }, [isAuthenticated]);
 
   return (
     <AppointmentsContext.Provider
@@ -159,6 +228,9 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
         deleteAppointment,
         setAppointments,
         requestAppointment,
+        acceptAppointment,
+        rejectAppointment,
+        updateDoctorAppointment,
       }}
     >
       {children}
