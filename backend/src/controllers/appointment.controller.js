@@ -298,6 +298,12 @@ const updateAppointment = asyncHandler(async (req, res) => {
       }
     }
 
+    if ('startTime' in updateFields && 'endTime' in updateFields) {
+      if (updateFields.startTime!==startTime || updateFields.endTime!==endTime){
+        updateFields.status = "rescheduled";
+      }
+    } 
+
     Object.assign(appointment, updateFields);
 
     await appointment.save({ validateBeforeSave: false });
