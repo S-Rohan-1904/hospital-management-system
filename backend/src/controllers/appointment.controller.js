@@ -249,6 +249,7 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
         startTime: 1,
         endTime: 1,
         status: 1,
+        description: 1,
         patient: {
           _id: "$patientDetails._id",
           fullName: "$patientDetails.fullName",
