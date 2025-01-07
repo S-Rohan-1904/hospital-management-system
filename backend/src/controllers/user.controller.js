@@ -120,29 +120,28 @@ const loginUser = asyncHandler(async (req, res) => {
     const { refreshToken, accessToken } = await generateAccessAndRefreshToken(
       user._id
     );
-  } catch (error) {
+    const loggedInUser = await User.findOne(user._id).select(
+      "-password -refreshToken"
+    );
+  
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { user: loggedInUser },
+          "User logged in successfully"
+        )
+      );
+      } catch (error) {
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while generating referesh and access token"))
   }
-
-  const loggedInUser = await User.findOne(user._id).select(
-    "-password -refreshToken"
-  );
-
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-  res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-      new ApiResponse(
-        200,
-        { user: loggedInUser },
-        "User logged in successfully"
-      )
-    );
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
