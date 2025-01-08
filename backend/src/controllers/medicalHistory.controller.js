@@ -154,12 +154,24 @@ const getMedicalHistories = asyncHandler(async (req, res) => {
 
 const getMedicalHistoryById = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const { type } = req.query;
+
   if (!["doctor", "patient"].includes(req.user?.role)) {
     return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
-  const medicalHistory = await MedicalHistory.findById(id)
+
+  let medicalHistory;
+
+  if (type==="doctor") {
+    medicalHistory = await MedicalHistory.find({doctor: id})
     .populate("patient doctor hospital")
     .exec();
+  }
+  else if (type==="patient") {
+    medicalHistory = await MedicalHistory.find({patient: id})
+    .populate("patient doctor hospital")
+    .exec();
+  }
 
   if (!medicalHistory) {
     return res
