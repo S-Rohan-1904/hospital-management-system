@@ -113,7 +113,15 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
 });
 
 const getMedicalHistories = asyncHandler(async (req, res) => {
-  const { patientId, doctorId } = req.body;
+  const { patientId, doctorId } = req.params;
+
+  if (!patientId) {
+    return res.status(400).json(new ApiResponse(400, {}, "patientId is required"));
+  }
+
+  if (!doctorId) {
+    return res.status(400).json(new ApiResponse(400, {}, "doctorId is required"));
+  }
 
   if (!["doctor", "patient"].includes(req.user?.role)) {
     return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
