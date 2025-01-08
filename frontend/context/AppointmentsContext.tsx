@@ -31,6 +31,7 @@ interface Appointment {
   startTime: string;
   endTime: string;
   status: string;
+  description?: string;
 }
 
 interface AppointmentsContextType {

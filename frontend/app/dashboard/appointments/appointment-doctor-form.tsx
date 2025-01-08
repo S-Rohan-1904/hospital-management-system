@@ -1,8 +1,7 @@
 "use client";
 
-import { AppointmentInterface } from "@/app/dashboard/appointments/appointments-client";
+import { AppointmentInterface } from "./appointments-doctor";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -11,16 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
-import { useHospitalsContext } from "@/context/HospitalsContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { add } from "date-fns";
@@ -57,26 +48,17 @@ export function AppointmentDoctorForm({
     )
   );
 
-  const [selectedHospital, setSelectedHospital] = useState<string>("");
-  const [selectedDoctor, setSelectedDoctor] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-
+  useEffect(() => {
+    console.log("description", description);
+  }, [description]);
   const { toast } = useToast();
-
-  const handleSelectChangeHospital = (value) => {
-    setSelectedHospital(value);
-  };
-
-  const handleSelectChangeDoctor = (value) => {
-    setSelectedDoctor(value);
-  };
 
   useEffect(() => {
     if (appointment) {
       setStartDate(appointment.startTime);
       setEndDate(appointment.endTime);
-      setSelectedHospital(appointment?.hospital?._id);
-      setSelectedDoctor(appointment?.doctor?._id);
+      setDescription(appointment.description);
     } else {
       setStartDate(
         format(
@@ -96,9 +78,8 @@ export function AppointmentDoctorForm({
           "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
         )
       );
-      setSelectedHospital("");
-      setSelectedDoctor("");
     }
+    console.log(appointment);
   }, [appointment]);
 
   const router = useRouter();
@@ -158,16 +139,15 @@ export function AppointmentDoctorForm({
             />
           </div>
 
-          {appointment.status === "scheduled" && (
-            <div className="space-y-2 w-[75%]">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-          )}
+          <div className="space-y-2 w-[75%]">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
 
           <div className="flex justify-end">
             <Button
