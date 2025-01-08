@@ -1,6 +1,7 @@
 "use client";
 
 import Loading from "../loading";
+import { AppointmentDescription } from "./appointment-description";
 import { AppointmentForm } from "./appointment-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -56,6 +57,7 @@ export interface AppointmentInterface {
     name: string;
     address: string;
   };
+  description?: string;
 }
 
 export function AppointmentsClient() {
@@ -68,6 +70,7 @@ export function AppointmentsClient() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentInterface | null>(null);
+  const [showDescription, setShowDescription] = useState<boolean>(false);
 
   useEffect(() => {
     fetchAppointments();
@@ -178,6 +181,16 @@ export function AppointmentsClient() {
                       >
                         Edit
                       </DropdownMenuItem>
+                      {appointment?.description && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedAppointment(appointment);
+                            setShowDescription(true);
+                          }}
+                        >
+                          Show Description
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => {
@@ -196,6 +209,12 @@ export function AppointmentsClient() {
           </TableBody>
         </Table>
       </div>
+
+      <AppointmentDescription
+        open={showDescription}
+        onOpenChange={setShowDescription}
+        description={selectedAppointment?.description}
+      />
 
       <AppointmentForm
         open={formOpen}

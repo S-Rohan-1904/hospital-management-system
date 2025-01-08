@@ -29,7 +29,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
-import { useHospitalsContext } from "@/context/HospitalsContext";
 import { format } from "date-fns";
 import { AlertCircle, Calendar, Clock, MoreVertical, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -40,6 +39,7 @@ export interface AppointmentInterface {
   startTime: string;
   endTime: string;
   status: string;
+  description?: string;
   patient: {
     _id: string;
     fullName: string;
@@ -59,7 +59,6 @@ export interface AppointmentInterface {
 }
 
 export function AppointmentsDoctor() {
-  const router = useRouter();
   const {
     appointments,
     loading,
@@ -68,7 +67,6 @@ export function AppointmentsDoctor() {
     acceptAppointment,
     rejectAppointment,
   } = useAppointmentsContext();
-  const { fetchHospitals } = useHospitalsContext();
 
   const [formOpen, setFormOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -77,7 +75,6 @@ export function AppointmentsDoctor() {
 
   useEffect(() => {
     fetchAppointments();
-    fetchHospitals();
   }, []);
 
   // Function to handle deleting an appointment
@@ -184,7 +181,9 @@ export function AppointmentsDoctor() {
                       setSelectedAppointment(appointment);
                       setFormOpen(true);
                     }}
-                    disabled={appointment.status !== "scheduled"}
+                    disabled={
+                      !["scheduled", "rescheduled"].includes(appointment.status)
+                    }
                   >
                     Update Appointment
                   </Button>
