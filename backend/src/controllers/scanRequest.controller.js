@@ -196,6 +196,21 @@ const getScanRequestsByRole = async (userId, role) => {
     { $unwind: { path: "$hospital", preserveNullAndEmptyArrays: true } },
     { $unwind: { path: "$appointment", preserveNullAndEmptyArrays: true } },
 
+    {
+      $project: {
+          "patient.password": 0, // Exclude password from patient
+          "doctor.password": 0, // Exclude password from doctor
+          "scanCentre.password": 0, // Exclude password from scanCentre
+          "hospital.doctors": 0, // Exclude password from hospital
+          "appointment.details": 0, // Exclude appointment details
+          "patient.refreshToken": 0,
+          "doctor.refreshToken": 0,
+          "scanCentre.refreshToken": 0,
+          "patient.username": 0,
+          "doctor.username": 0,
+          "scanCentre.username": 0,
+      },
+    },
     // Optional: Add computed fields if needed
     {
       $addFields: {
