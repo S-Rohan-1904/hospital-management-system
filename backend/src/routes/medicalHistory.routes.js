@@ -16,7 +16,7 @@ import {
 
 const router = Router();
 
-router.route("/").get(verifyJWT, validate(getMedicalHistorySchema), getMedicalHistories);
+router.route("/:patientId/hospital/:doctorId").get(verifyJWT, getMedicalHistories);
 router.route("/:id").get(verifyJWT, getMedicalHistoryById);
 router.route("/").post(verifyJWT, validate(createMedicalHistorySchema), createMedicalHistory);
 router.route("/:id").patch(verifyJWT, validate(updateMedicalHistorySchema), updateMedicalHistory);
