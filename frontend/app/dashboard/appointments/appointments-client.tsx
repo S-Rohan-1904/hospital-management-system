@@ -173,14 +173,16 @@ export function AppointmentsClient() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedAppointment(appointment);
-                          setFormOpen(true);
-                        }}
-                      >
-                        Edit
-                      </DropdownMenuItem>
+                      {appointment.status === "pending" && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedAppointment(appointment);
+                            setFormOpen(true);
+                          }}
+                        >
+                          Edit
+                        </DropdownMenuItem>
+                      )}
                       {appointment?.description && (
                         <DropdownMenuItem
                           onClick={() => {
@@ -191,16 +193,18 @@ export function AppointmentsClient() {
                           Show Description
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => {
-                          setSelectedAppointment(appointment);
-                          setDeleteDialogOpen(true);
-                        }}
-                        disabled={appointment.status !== "pending"}
-                      >
-                        Delete
-                      </DropdownMenuItem>
+                      {appointment.status === "pending" && (
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => {
+                            setSelectedAppointment(appointment);
+                            setDeleteDialogOpen(true);
+                          }}
+                          disabled={appointment.status !== "pending"}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
