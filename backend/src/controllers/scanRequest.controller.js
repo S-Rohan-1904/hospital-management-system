@@ -200,6 +200,8 @@ const getScanRequestsByRole = async (userId, role) => {
     {
       $addFields: {
         isCompleted: { $eq: ["$status", "completed"] },
+        createdAt: "$createdAt", // Include createdAt if present
+        updatedAt: "$updatedAt",
       },
     },
 
