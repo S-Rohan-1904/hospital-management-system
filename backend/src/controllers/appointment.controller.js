@@ -235,14 +235,40 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "scanrequests",
+        localField: "_id",
+        foreignField: "appointment",
+        as: "scanRequestDetails",
+      },
+    },
+    {
       $unwind: "$patientDetails",
     },
+
     {
       $unwind: "$doctorDetails",
     },
+  
+    // Unwind hospital details
     {
       $unwind: "$hospitalDetails",
     },
+  
+    // Add hasScanRequest key
+    {
+      $addFields: {
+        hasScanRequest: {
+          $cond: {
+            if: { $gt: [{ $size: "$scanRequestDetails" }, 0] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+  
+    // Project the required fields
     {
       $project: {
         _id: 1,
@@ -250,6 +276,8 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
         endTime: 1,
         status: 1,
         description: 1,
+        hasScanRequest: 1,
+        scanRequest: { $arrayElemAt: ["$scanRequestDetails", 0] },
         patient: {
           _id: "$patientDetails._id",
           fullName: "$patientDetails.fullName",
@@ -269,8 +297,9 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
       },
     },
   ];
-
+  
   const appointments = await Appointment.aggregate(pipeline);
+  
 
   return res
     .status(200)

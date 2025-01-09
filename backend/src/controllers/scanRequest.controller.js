@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
 import { ScanRequest } from "../models/scanRequest.model.js";
 import { Appointment } from "../models/appointment.model.js";
+import { User } from "../models/user.model.js";
 
 const createScanRequest = asyncHandler(async (req, res) => {
   if (req.user?.role !== "doctor") {
@@ -196,6 +197,21 @@ const getScanRequestsByRole = async (userId, role) => {
     { $unwind: { path: "$hospital", preserveNullAndEmptyArrays: true } },
     { $unwind: { path: "$appointment", preserveNullAndEmptyArrays: true } },
 
+    {
+      $project: {
+          "patient.password": 0, // Exclude password from patient
+          "doctor.password": 0, // Exclude password from doctor
+          "scanCentre.password": 0, // Exclude password from scanCentre
+          "hospital.doctors": 0, // Exclude password from hospital
+          "appointment.details": 0, // Exclude appointment details
+          "patient.refreshToken": 0,
+          "doctor.refreshToken": 0,
+          "scanCentre.refreshToken": 0,
+          "patient.username": 0,
+          "doctor.username": 0,
+          "scanCentre.username": 0,
+      },
+    },
     // Optional: Add computed fields if needed
     {
       $addFields: {
@@ -288,7 +304,6 @@ const completeScanRequest = asyncHandler(async (req, res) => {
 
 const updateScanRequest = asyncHandler(async (req, res) => {
   const { role } = req.user;
-  const { description } = req.body;
   const scanRequestId = req.params?.id;
 
   const scanRequest = await ScanRequest.findById(scanRequestId);
@@ -300,6 +315,7 @@ const updateScanRequest = asyncHandler(async (req, res) => {
   }
 
   if (role === "doctor") {
+    const { description } = req.body;
     if (!description) {
       return res.status(400).json({ error: "Description is required" });
     }
@@ -349,6 +365,28 @@ const updateScanRequest = asyncHandler(async (req, res) => {
     );
 });
 
+const getAllScancentres = asyncHandler(async (req, res) => {
+  try {
+    const scanCentres = await User.find({role: "scanCentre"}).select("-username -password -refreshToken")
+  
+    if (!scanCentres) {
+      return res.status(404).json(new ApiResponse(404, {}, "No ScanCentres found"));
+    }
+  
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          scanCentres,
+          "ScanCentres have been successfully fetched."
+        )
+      );
+  } catch (error) {
+    return res.status(500).json(new ApiResponse(500, {}, "Unable to fetch ScanCentres."))
+  }
+});
+
 export {
   createScanRequest,
   deleteScanRequest,
@@ -356,4 +394,5 @@ export {
   getScanRequests,
   completeScanRequest,
   updateScanRequest,
+  getAllScancentres,
 };
