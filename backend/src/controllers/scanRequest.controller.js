@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
 import { ScanRequest } from "../models/scanRequest.model.js";
 import { Appointment } from "../models/appointment.model.js";
+import { User } from "../models/user.model.js";
 
 const createScanRequest = asyncHandler(async (req, res) => {
   if (req.user?.role !== "doctor") {
@@ -303,7 +304,6 @@ const completeScanRequest = asyncHandler(async (req, res) => {
 
 const updateScanRequest = asyncHandler(async (req, res) => {
   const { role } = req.user;
-  const { description } = req.body;
   const scanRequestId = req.params?.id;
 
   const scanRequest = await ScanRequest.findById(scanRequestId);
@@ -315,6 +315,7 @@ const updateScanRequest = asyncHandler(async (req, res) => {
   }
 
   if (role === "doctor") {
+    const { description } = req.body;
     if (!description) {
       return res.status(400).json({ error: "Description is required" });
     }
@@ -364,6 +365,28 @@ const updateScanRequest = asyncHandler(async (req, res) => {
     );
 });
 
+const getAllScancentres = asyncHandler(async (req, res) => {
+  try {
+    const scanCentres = await User.find({role: "scanCentre"}).select("-username -password -refreshToken")
+  
+    if (!scanCentres) {
+      return res.status(404).json(new ApiResponse(404, {}, "No ScanCentres found"));
+    }
+  
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          scanCentres,
+          "ScanCentres have been successfully fetched."
+        )
+      );
+  } catch (error) {
+    return res.status(500).json(new ApiResponse(500, {}, "Unable to fetch ScanCentres."))
+  }
+});
+
 export {
   createScanRequest,
   deleteScanRequest,
@@ -371,4 +394,5 @@ export {
   getScanRequests,
   completeScanRequest,
   updateScanRequest,
+  getAllScancentres,
 };

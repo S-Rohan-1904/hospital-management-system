@@ -6,6 +6,7 @@ import {
   getScanRequests,
   completeScanRequest,
   updateScanRequest,
+  getAllScancentres,
 } from "../controllers/scanRequest.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -27,5 +28,6 @@ router
 router
   .route("/:id")
   .patch(verifyJWT, upload.single("scanDocument"), validate(updateScanRequestSchema) , updateScanRequest);
+router.route("/centres").get(verifyJWT, getAllScancentres)
 
 export default router;
