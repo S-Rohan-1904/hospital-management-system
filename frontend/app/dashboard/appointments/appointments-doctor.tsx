@@ -2,6 +2,7 @@
 
 import Loading from "../loading";
 import { AppointmentDoctorForm } from "./appointment-doctor-form";
+import { ScanDoctorForm } from "./scan-doctor-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -29,10 +30,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
-import { format } from "date-fns";
+import { useScansContext } from "@/context/ScansContext";
+import { format, set } from "date-fns";
 import { AlertCircle, Calendar, Clock, MoreVertical, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 export interface AppointmentInterface {
   _id: string;
@@ -56,6 +58,19 @@ export interface AppointmentInterface {
     name: string;
     address: string;
   };
+  hasScanRequest: boolean;
+  scanRequest: {
+    _id: string;
+    patient: string;
+    doctor: string;
+    hospital: string;
+    scanCentre: string;
+    scanDocument: string;
+    appointment: string;
+    dateOfUpload: string;
+    description: string;
+    status: string;
+  };
 }
 
 export function AppointmentsDoctor() {
@@ -69,15 +84,30 @@ export function AppointmentsDoctor() {
   } = useAppointmentsContext();
 
   const [formOpen, setFormOpen] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [scanRequestFormOpen, setScanRequestFormOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentInterface | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const { deleteScan } = useScansContext();
 
+  const router = useRouter();
   useEffect(() => {
     fetchAppointments();
   }, []);
 
-  // Function to handle deleting an appointment
+  useEffect(() => {
+    console.log(appointments);
+  }, [appointments]);
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteScan(id);
+      setDeleteDialogOpen(false);
+      router.refresh();
+    } catch (err) {
+      console.error("Error:", err);
+    }
+  }
   const acceptAppointmentHandler = async (selectedAppointmentId: string) => {
     try {
       const response = await acceptAppointment(selectedAppointmentId);
@@ -188,6 +218,34 @@ export function AppointmentsDoctor() {
                     Update Appointment
                   </Button>
                 </TableCell>
+                <TableCell>
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      setSelectedAppointment(appointment);
+                      setScanRequestFormOpen(true);
+                    }}
+                    disabled={
+                      !["scheduled", "rescheduled"].includes(appointment.status)
+                    }
+                  >
+                    {appointment.hasScanRequest
+                      ? "Update Scan Request"
+                      : "Create Scan Request"}
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setSelectedAppointment(appointment);
+                      setDeleteDialogOpen(true);
+                    }}
+                    disabled={!appointment.hasScanRequest}
+                  >
+                    Delete Scan Request
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -199,6 +257,41 @@ export function AppointmentsDoctor() {
         onOpenChange={setFormOpen}
         appointment={selectedAppointment}
       />
+
+      <ScanDoctorForm
+        open={scanRequestFormOpen}
+        onOpenChange={setScanRequestFormOpen}
+        appointmentId={selectedAppointment?._id}
+        scan={
+          selectedAppointment?.hasScanRequest
+            ? selectedAppointment?.scanRequest
+            : null
+        }
+        setSelectedAppointment={setSelectedAppointment}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this Scan Request.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                selectedAppointment.scanRequest &&
+                handleDelete(selectedAppointment.scanRequest?._id)
+              }
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

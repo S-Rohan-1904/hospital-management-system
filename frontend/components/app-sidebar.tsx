@@ -20,6 +20,7 @@ import {
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
+import { url } from "inspector";
 import { Home, Settings, CalendarCheck2, ScrollText } from "lucide-react";
 import { ChevronUp, User2 } from "lucide-react";
 import Link from "next/link";
@@ -46,6 +47,11 @@ const items = [
     title: "Settings",
     url: "#",
     icon: Settings,
+  },
+  {
+    title: "Scans",
+    url: "/dashboard/scans",
+    icon: ScrollText,
   },
 ];
 

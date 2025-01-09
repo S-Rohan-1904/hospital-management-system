@@ -70,6 +70,7 @@ interface AuthContextType {
   currentUser: AuthResponse | null;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  fetchAuthStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -82,34 +83,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<AuthResponse | null>(null);
   const router = useRouter();
 
-  // Fetch authentication status and user data
-  useEffect(() => {
-    const fetchAuthStatus = async () => {
-      try {
-        const response = await axiosInstance.get("/users", {
+  const fetchAuthStatus = async () => {
+    try {
+      const response = await axiosInstance.get("/users", {
+        withCredentials: true,
+      });
+
+      setIsAuthenticated(response.data.authenticated);
+
+      if (response.data.authenticated) {
+        const userResponse = await axiosInstance.get("/users/current-user", {
           withCredentials: true,
         });
 
-        setIsAuthenticated(response.data.authenticated);
-
-        if (response.data.authenticated) {
-          const userResponse = await axiosInstance.get("/users/current-user", {
-            withCredentials: true,
-          });
-
-          setCurrentUser(userResponse.data.data);
-        } else {
-          setCurrentUser(null);
-        }
-      } catch (err) {
-        console.error("Failed to check authentication:", err);
-        setIsAuthenticated(false);
+        setCurrentUser(userResponse.data.data);
+      } else {
         setCurrentUser(null);
-      } finally {
-        setAuthLoading(false);
       }
-    };
-
+    } catch (err) {
+      console.error("Failed to check authentication:", err);
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  // Fetch authentication status and user data
+  useEffect(() => {
     fetchAuthStatus();
   }, []);
 
@@ -192,6 +192,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isAuthenticated,
         authLoading,
         currentUser,
+        fetchAuthStatus,
       }}
     >
       {children}

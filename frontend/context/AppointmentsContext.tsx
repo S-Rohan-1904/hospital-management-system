@@ -32,6 +32,19 @@ interface Appointment {
   endTime: string;
   status: string;
   description?: string;
+  hasScanRequest: boolean;
+  scanRequest: {
+    _id: string;
+    patient: string;
+    doctor: string;
+    hospital: string;
+    scanCentre: string;
+    scanDocument: string;
+    appointment: string;
+    dateOfUpload: string;
+    description: string;
+    status: string;
+  };
 }
 
 interface AppointmentsContextType {
