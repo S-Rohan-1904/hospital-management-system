@@ -323,11 +323,19 @@ const updateScanRequest = asyncHandler(async (req, res) => {
   }
 
   if (role === "doctor") {
-    const { description } = req.body;
-    if (!description) {
-      return res.status(400).json({ error: "Description is required" });
+    const { description, scanCentre } = req.body;
+
+    if (!description && !scanCentre) {
+      return res.status(400).json(new ApiResponse(400,{},"description or scanCentre is required"));
     }
-    scanRequest.description = description;
+    if (description) {
+      scanRequest.description = description;      
+    }
+
+    if (scanCentre) {
+      scanRequest.scanCentre = scanCentre;
+    }
+
   } else if (role === "scanCentre") {
     const updatedScanDocumentLocalPath = req.file?.path;
 

@@ -27,7 +27,7 @@ router
 
 router
   .route("/:id")
-  .patch(verifyJWT, upload.single("scanDocument"), validate(updateScanRequestSchema) , updateScanRequest);
+  .patch(verifyJWT, upload.single("scanDocument"), updateScanRequest);
 router.route("/centres").get(verifyJWT, getAllScancentres)
 
 export default router;
