@@ -21,32 +21,40 @@ const createScanRequest = asyncHandler(async (req, res) => {
   //     .json(new ApiResponse(400, {}, "All fields are required"));
   // }
 
-  const appointmentObject = await Appointment.findById(appointment);
+  const checkScanRequestExists = await ScanRequest.findOne({appointment: appointment});
 
-  if (!appointmentObject) {
+  if (!checkScanRequestExists) {
+    const appointmentObject = await Appointment.findById(appointment);
+  
+    if (!appointmentObject) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Invalid Appointment"));
+    }
+  
+    const scanRequest = await ScanRequest.create({
+      patient: appointmentObject.patient,
+      doctor: req.user._id,
+      scanCentre,
+      hospital: appointmentObject.hospital,
+      description,
+      appointment: appointmentObject._id,
+    });
+  
+    if (!scanRequest) {
+      return res
+        .status(500)
+        .json(new ApiResponse(500, {}, "Failed to create scan request"));
+    }
+  
     return res
-      .status(404)
-      .json(new ApiResponse(404, {}, "Invalid Appointment"));
-  }
-
-  const scanRequest = await ScanRequest.create({
-    patient: appointmentObject.patient,
-    doctor: req.user._id,
-    scanCentre,
-    hospital: appointmentObject.hospital,
-    description,
-    appointment: appointmentObject._id,
-  });
-
-  if (!scanRequest) {
-    return res
-      .status(500)
-      .json(new ApiResponse(500, {}, "Failed to create scan request"));
-  }
-
+      .status(201)
+      .json(new ApiResponse(201, scanRequest, "Scan request created"));
+} else {
   return res
-    .status(201)
-    .json(new ApiResponse(201, scanRequest, "Scan request created"));
+    .status(409)
+    .json(new ApiResponse(409, {}, "Scan Request for this appointment already exists."));
+}
 });
 
 const deleteScanRequest = asyncHandler(async (req, res) => {
