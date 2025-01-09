@@ -35,7 +35,7 @@ const createScanRequest = asyncHandler(async (req, res) => {
     scanCentre,
     hospital: appointmentObject.hospital,
     description,
-    appointment: appointment._id,
+    appointment: appointmentObject._id,
   });
 
   if (!scanRequest) {
