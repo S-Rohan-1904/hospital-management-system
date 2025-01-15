@@ -78,15 +78,22 @@ const deleteScanRequest = asyncHandler(async (req, res) => {
       .json(new ApiResponse(404, {}, "Scan request not found"));
   }
 
-  if (!scanRequest.doctor.equals(req.user._id)) {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
+  if (["pending","rejected"].includes(scanRequest.status)) {
+    if (!scanRequest.doctor.equals(req.user._id)) {
+      return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
+    }
+  
+    await ScanRequest.deleteOne({ _id: scanRequest._id });
+  
+    return res
+      .status(200)
+      .json(new ApiResponse(200, scanRequest, "Scan request deleted"));
   }
-
-  await ScanRequest.deleteOne({ _id: scanRequest._id });
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, scanRequest, "Scan request deleted"));
+ else {
+    return res
+      .status(409)
+      .json(new ApiResponse(409, {}, "Scan request cannot be deleted"));
+ }
 });
 
 const approveOrRejectScanRequest = asyncHandler(async (req, res) => {
