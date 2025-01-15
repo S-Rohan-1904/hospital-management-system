@@ -250,7 +250,7 @@ const deleteMedicalHistory = asyncHandler(async (req, res) => {
 });
 
 const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
-  const { _id,role } = req.body;
+  const { _id, role } = req.body;
   const { role: userRole } = req.user;
 
   if (!["doctor", "patient"].includes(userRole)) {
@@ -259,11 +259,18 @@ const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
       .json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
+  // Utility function to format date to "29th Jan 2025"
+  const formatDate = (date) => {
+    const day = new Date(date).getDate();
+    const month = new Date(date).toLocaleString('default', { month: 'short' });
+    const year = new Date(date).getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
   try {
-    
     const medicalHistories = await MedicalHistory.aggregate([
       {
-        $match: role === "doctor" ? { doctor: new mongoose.Types.ObjectId(_id)  } : 
+        $match: role === "doctor" ? { doctor: new mongoose.Types.ObjectId(_id) } : 
         { patient: new mongoose.Types.ObjectId(_id) },
       },
       {
@@ -298,8 +305,8 @@ const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
           _id: 1,
           diagnosis: 1,
           description: 1,
-          startDate: { $dateToString: { format: "%d-%m-%Y", date: "$startDate" } },
-          endDate: { $dateToString: { format: "%d-%m-%Y", date: "$endDate" } },
+          startDate: 1, 
+          endDate: 1,   
           scanDocuments: 1,
           "patientDetails.fullName": 1,
           "doctorDetails.fullName": 1,
@@ -333,7 +340,6 @@ const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
       const addPageIfNeeded = (yOffset, additionalHeight) => {
         
         if (yOffset + additionalHeight > pageHeight - 30) {
-
           pdf.addPage();
           return 30; // Reset yOffset for the new page
         }
@@ -367,9 +373,11 @@ const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
       yOffset += 20;
       pdf.text(`Hospital Name: ${history.hospitalDetails.name}`, margin, yOffset);
       yOffset += 20;
-      pdf.text(`Start Date: ${new Date(history.startDate).toLocaleDateString()}`, margin, yOffset);
+      
+      // Use formatDateWithSuffix to display the date with suffix
+      pdf.text(`Start Date: ${formatDate(history.startDate)}`, margin, yOffset);
       yOffset += 20;
-      pdf.text(`End Date: ${new Date(history.endDate).toLocaleDateString()}`, margin, yOffset);
+      pdf.text(`End Date: ${formatDate(history.endDate)}`, margin, yOffset);
       yOffset += 20;
     
       // Diagnosis Section
@@ -417,6 +425,7 @@ const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
       .json(new ApiResponse(500, {}, error.message || "Something went wrong while generating the PDF"));
   }
 });
+
 
 export {
   createMedicalHistory,
