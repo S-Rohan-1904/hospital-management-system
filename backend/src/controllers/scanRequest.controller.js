@@ -284,22 +284,33 @@ const completeScanRequest = asyncHandler(async (req, res) => {
 
   const scanDocumentLocalPath = req.file?.path;
 
-  if (!scanDocumentLocalPath) {
+  if (!scanDocumentLocalPath && !scanRequest.scanDocument) {
     return res
       .status(400)
       .json(new ApiResponse(400, {}, "Scan document is required"));
   }
 
-  const scanDocument = await uploadToCloudinary(scanDocumentLocalPath);
+  if (scanDocumentLocalPath) {
 
-  if (!scanDocument) {
-    return res
-      .status(500)
-      .json(new ApiResponse(500, {}, "Error uploading scan document"));
+    const fileExtension = scanDocumentLocalPath.split('.').pop().toLowerCase();
+    if (fileExtension !== 'pdf') {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Only PDF files are allowed"));
+  }
+    const scanDocument = await uploadToCloudinary(scanDocumentLocalPath);
+
+    if (!scanDocument) {
+      return res
+        .status(500)
+        .json(new ApiResponse(500, {}, "Error uploading scan document"));
+    }
+
+    console.log(scanDocument.url)
+    scanRequest.scanDocument = scanDocument.url;
   }
 
   scanRequest.status = "completed";
-  scanRequest.scanDocument = scanDocument.url;
   scanRequest.dateOfUpload = Date.now();
   await scanRequest.save({ validateBeforeSave: false });
 
@@ -345,6 +356,13 @@ const updateScanRequest = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Scan document is required"));
     }
 
+    const fileExtension = updatedScanDocumentLocalPath.split('.').pop().toLowerCase();
+    if (fileExtension !== 'pdf') {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Only PDF files are allowed"));
+    }
+
     const updatedScanDocument = await uploadToCloudinary(
       updatedScanDocumentLocalPath
     );
@@ -357,7 +375,9 @@ const updateScanRequest = asyncHandler(async (req, res) => {
 
     const oldScanDocument = scanRequest.scanDocument;
 
-    scanRequest.scanDocument = updatedScanDocument;
+    console.log(updatedScanDocument)
+
+    scanRequest.scanDocument = updatedScanDocument.url;
 
     if (oldScanDocument) {
       await deleteFromCloudinary(oldScanDocument);
