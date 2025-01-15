@@ -39,37 +39,38 @@ async function getAccessToken() {
 
 const getNearbyHospital = asyncHandler(async (req, res) => {
   try {
-    const accessToken = await getAccessToken();
+    const { accessToken } = await getAccessToken();
 
     if (!accessToken) {
       return res
-        .status(404)
+        .status(500)
         .json(
           new ApiResponse(
-            404,
+            500,
             {},
             "Something went wrong while fetching nearby hospitals"
           )
         );
     }
 
-    const NearbyHospitals = await axios.get(
+    const { location } = req.body;
+
+    const nearbyHospitals = await axios.get(
       "https://atlas.mappls.com/api/places/nearby/json",
       {
         headers: {
           Authorization: `bearer ${accessToken}`,
         },
-      },
-      {
         params: {
           keywords: "hospital",
-          refLocation: "",
-          radius: 5000,
+          refLocation: location, // ensure this is a valid value
+          radius: 2000,
         },
       }
     );
 
-    if (NearbyHospitals.suggestedLocations.length === 0) {
+    console.log(nearbyHospitals.data)
+    if (nearbyHospitals.data.suggestedLocations.length === 0) {
       return res
         .status(500)
         .json(new ApiResponse(500, {}, "Unable to fetch nearby Hospitals"));
@@ -80,7 +81,7 @@ const getNearbyHospital = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          NearbyHospitals.suggestedLocations,
+          nearbyHospitals.data.suggestedLocations,
           "Nearby Hospitals successfully fetched."
         )
       );
