@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthContext } from "@/context/AuthContext";
 import axiosInstance from "@/utils/axiosInstance";
 import {
   createContext,
@@ -42,8 +41,6 @@ export const HospitalsProvider = ({ children }: { children: ReactNode }) => {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  const { isAuthenticated } = useAuthContext();
 
   const fetchHospitals = async () => {
     setLoading(true);

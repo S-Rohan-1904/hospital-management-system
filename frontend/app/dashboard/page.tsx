@@ -1,5 +1,6 @@
 "use client";
 
+import Loading from "./loading";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { useEffect } from "react";
@@ -10,7 +11,7 @@ export default function DashboardPage() {
 
   // If auth check is still loading, show a loading state
   if (authLoading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   // Render loading, error, or appointments based on the state
@@ -24,25 +25,16 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1>Appointments</h1>
-      <ul>
-        {appointments.map((appointment) => (
-          <li key={appointment._id}>
-            <strong>{appointment.patient.fullName}</strong> (
-            {appointment.patient.email}) - {appointment.status}
-            <br />
-            Doctor: {appointment.doctor.fullName} (
-            {appointment.doctor.specialization})
-            <br />
-            Hospital: {appointment.hospital.name} (
-            {appointment.hospital.address})
-            <br />
-            Start Time: {new Date(appointment.startTime).toLocaleString()}
-            <br />
-            End Time: {new Date(appointment.endTime).toLocaleString()}
-          </li>
-        ))}
-      </ul>
+      {currentUser.role === "scanCentre" ? (
+        <div>
+          <h1>Scan Centre Dashboard</h1>
+        </div>
+      ) : (
+        <div>
+          <h1>Dashboard</h1>
+          <p>Appointments: {appointments.length}</p>
+        </div>
+      )}
     </div>
   );
 }

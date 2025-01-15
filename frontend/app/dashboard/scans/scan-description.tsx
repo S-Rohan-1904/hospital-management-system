@@ -6,23 +6,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface AppointmentDescriptionProps {
+interface ScanDescriptionProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  description: string | null;
+  description?: string | null;
 }
-export function AppointmentDescription({
+export function ScanDescription({
   open,
   onOpenChange,
   description,
-}: AppointmentDescriptionProps) {
+}: ScanDescriptionProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent aria-describedby="appointment-description">
+      <DialogContent aria-describedby="scan-description">
         <DialogHeader>
           <DialogTitle>Description</DialogTitle>
         </DialogHeader>
-        <DialogDescription id="appointment-description">
+        <DialogDescription id="scan-description">
           {description}
         </DialogDescription>
       </DialogContent>

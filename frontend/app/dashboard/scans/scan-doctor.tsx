@@ -1,8 +1,7 @@
 "use client";
 
 import Loading from "../loading";
-import { AppointmentDescription } from "./appointment-description";
-import { AppointmentForm } from "./appointment-form";
+import { ScanDescription } from "./scan-description";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -30,56 +29,30 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
-import { useHospitalsContext } from "@/context/HospitalsContext";
+import { useScansContext } from "@/context/ScansContext";
+import { Scan } from "@/context/ScansContext";
 import { format } from "date-fns";
 import { AlertCircle, Calendar, Clock, MoreVertical, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export interface AppointmentInterface {
-  _id: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-  patient: {
-    _id: string;
-    fullName: string;
-    email: string;
-  };
-  doctor: {
-    _id: string;
-    fullName: string;
-    email: string;
-    specialization: string;
-  };
-  hospital: {
-    _id: string;
-    name: string;
-    address: string;
-  };
-  description?: string;
-}
-
-export function AppointmentsClient() {
+export function ScansDoctor() {
   const router = useRouter();
-  const { appointments, loading, error, deleteAppointment, fetchAppointments } =
-    useAppointmentsContext();
-  const { fetchHospitals } = useHospitalsContext();
+  const { appointments } = useAppointmentsContext();
+  const { scans, loading, error, fetchScan, deleteScan } = useScansContext();
 
   const [formOpen, setFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] =
-    useState<AppointmentInterface | null>(null);
+  const [selectedScan, setSelectedScan] = useState<Scan | null>(null);
   const [showDescription, setShowDescription] = useState<boolean>(false);
 
   useEffect(() => {
-    fetchAppointments();
-    fetchHospitals();
+    fetchScan();
   }, []);
 
   async function handleDelete(id: string) {
     try {
-      await deleteAppointment(id);
+      await deleteScan(id);
       setDeleteDialogOpen(false);
       router.refresh();
     } catch (err) {
@@ -93,16 +66,16 @@ export function AppointmentsClient() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Appointments</h1>
+        <h1 className="text-2xl font-bold">Scans</h1>
 
         <Button
           onClick={() => {
-            setSelectedAppointment(null);
+            setSelectedScan(null);
             setFormOpen(true);
           }}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Request Appointment
+          Request Scan
         </Button>
       </div>
       {error && (
@@ -117,33 +90,37 @@ export function AppointmentsClient() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Doctor</TableHead>
-              <TableHead>Hospital</TableHead>
-              <TableHead>Date & Time</TableHead>
+              <TableHead>Patient</TableHead>
+              <TableHead>Scan Centre</TableHead>
+              <TableHead>Date of Creation</TableHead>
+              <TableHead>Date of Upload</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {appointments.map((appointment) => (
-              <TableRow key={appointment._id}>
+            {scans.map((scan) => (
+              <TableRow key={scan._id}>
                 <TableCell className="font-medium">
-                  {appointment?.doctor?.fullName}
+                  {scan?.patient?.fullName}
                 </TableCell>
                 <TableCell className="font-medium">
-                  {appointment?.hospital?.name}
+                  {scan?.scanCentre?.fullName}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center text-muted-foreground">
                     <Calendar className="w-4 h-4 mr-2" />
-                    {format(
-                      new Date(appointment?.startTime),
-                      "dd/MM/yyyy"
-                    )}{" "}
+                    {format(new Date(scan?.createdAt), "dd/MM/yyyy")}{" "}
                     <Clock className="w-4 h-4 ml-4 mr-2" />
-                    {format(new Date(appointment?.startTime), "hh:mm a")}
-                    {" - "}
-                    {format(new Date(appointment?.endTime), "hh:mm a")}
+                    {format(new Date(scan?.createdAt), "hh:mm a")}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center text-muted-foreground">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {format(new Date(scan?.dateOfUpload), "dd/MM/yyyy")}{" "}
+                    <Clock className="w-4 h-4 ml-4 mr-2" />
+                    {format(new Date(scan?.dateOfUpload), "hh:mm a")}
                   </div>
                 </TableCell>
 
@@ -152,14 +129,14 @@ export function AppointmentsClient() {
                     <div
                       className={`h-2 w-2 rounded-full mr-2 ${
                         {
-                          scheduled: "bg-green-500",
-                          rescheduled: "bg-orange-500",
+                          completed: "bg-green-500",
+                          accepted: "bg-orange-500",
                           pending: "bg-yellow-500",
                           rejected: "bg-red-500",
-                        }[appointment.status] || "bg-gray-500"
+                        }[scan.status] || "bg-gray-500"
                       }`}
                     />
-                    {appointment.status}
+                    {scan.status}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -171,34 +148,34 @@ export function AppointmentsClient() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {appointment.status === "pending" && (
+                      {scan.status === "pending" && (
                         <DropdownMenuItem
                           onClick={() => {
-                            setSelectedAppointment(appointment);
+                            setSelectedScan(scan);
                             setFormOpen(true);
                           }}
                         >
                           Edit
                         </DropdownMenuItem>
                       )}
-                      {appointment?.description && (
+                      {scan?.description && (
                         <DropdownMenuItem
                           onClick={() => {
-                            setSelectedAppointment(appointment);
+                            setSelectedScan(scan);
                             setShowDescription(true);
                           }}
                         >
                           Show Description
                         </DropdownMenuItem>
                       )}
-                      {appointment.status === "pending" && (
+                      {scan.status === "pending" && (
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => {
-                            setSelectedAppointment(appointment);
+                            setSelectedScan(scan);
                             setDeleteDialogOpen(true);
                           }}
-                          disabled={appointment.status !== "pending"}
+                          disabled={scan.status !== "pending"}
                         >
                           Delete
                         </DropdownMenuItem>
@@ -212,16 +189,16 @@ export function AppointmentsClient() {
         </Table>
       </div>
 
-      <AppointmentDescription
+      <ScanDescription
         open={showDescription}
         onOpenChange={setShowDescription}
-        description={selectedAppointment?.description}
+        description={selectedScan?.description}
       />
 
-      <AppointmentForm
+      <ScanForm
         open={formOpen}
         onOpenChange={setFormOpen}
-        appointment={selectedAppointment}
+        scan={selectedScan}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -229,15 +206,13 @@ export function AppointmentsClient() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this appointment.
+              This will permanently delete this scan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() =>
-                selectedAppointment && handleDelete(selectedAppointment._id)
-              }
+              onClick={() => selectedScan && handleDelete(selectedScan._id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete

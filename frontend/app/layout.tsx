@@ -2,6 +2,8 @@ import { AppointmentsProvider } from "../context/AppointmentsContext";
 import { HospitalsProvider } from "../context/HospitalsContext";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
+import { MedicalHistoryProvider } from "@/context/MedicalHistoryContext";
+import { ScansProvider } from "@/context/ScansContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function RootLayout({
@@ -19,9 +21,13 @@ export default function RootLayout({
       <body>
         <GoogleOAuthProvider clientId="117839731186-0vl1vchrk5on1bol3mledra6840ckvbd.apps.googleusercontent.com">
           <AuthProvider>
-            <HospitalsProvider>
-              <AppointmentsProvider>{children}</AppointmentsProvider>
-            </HospitalsProvider>
+            <MedicalHistoryProvider>
+              <HospitalsProvider>
+                <AppointmentsProvider>
+                  <ScansProvider>{children}</ScansProvider>
+                </AppointmentsProvider>
+              </HospitalsProvider>
+            </MedicalHistoryProvider>
           </AuthProvider>
         </GoogleOAuthProvider>
       </body>
