@@ -1,6 +1,6 @@
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { uploadToCloudinary,deleteFromCloudinary } from "../utils/cloudinary.js";
 import { ScanRequest } from "../models/scanRequest.model.js";
 import { Appointment } from "../models/appointment.model.js";
 import { User } from "../models/user.model.js";
