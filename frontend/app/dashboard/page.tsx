@@ -5,7 +5,7 @@ import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { useEffect } from "react";
 
-export default function DashboardPage() {
+export default function ScanDashboard() {
   const { appointments, loading, error } = useAppointmentsContext();
   const { isAuthenticated, authLoading, currentUser } = useAuthContext(); // Access currentUser
 
@@ -25,16 +25,8 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {currentUser.role === "scanCentre" ? (
-        <div>
-          <h1>Scan Centre Dashboard</h1>
-        </div>
-      ) : (
-        <div>
-          <h1>Dashboard</h1>
-          <p>Appointments: {appointments.length}</p>
-        </div>
-      )}
+      <h1>Dashboard</h1>
+      <p>Appointments: {appointments.length}</p>
     </div>
   );
 }

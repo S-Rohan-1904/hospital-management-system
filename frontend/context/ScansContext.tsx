@@ -16,46 +16,34 @@ export interface Scan {
   description: string;
   patient: {
     _id: string;
-    username: string;
     email: string;
     fullName: string;
     avatar: string;
-    password: string;
     address: string;
     role: string;
     gender: string;
     createdAt: string;
     updatedAt: string;
-    __v: number;
-    refreshToken: string;
   };
   doctor: {
     _id: string;
-    username: string;
     email: string;
     fullName: string;
     avatar: string;
     role: string;
     specialization: string;
-    __v: number;
     createdAt: string;
     updatedAt: string;
-    password: string;
-    refreshToken: string;
   };
   scanCentre: {
     _id: string;
-    username: string;
     email: string;
     fullName: string;
     avatar: string;
-    password: string;
     address: string;
     role: string;
-    __v: number;
     createdAt: string;
     updatedAt: string;
-    refreshToken: string;
   };
   hospital: {
     _id: string;
@@ -67,10 +55,8 @@ export interface Scan {
       coordinates: [number, number];
     };
     doctors: string[];
-    __v: number;
   };
   status: string;
-  __v: number;
   updatedAt: string;
   createdAt: string;
   dateOfUpload: string;
@@ -92,6 +78,8 @@ interface ScansContextType {
   rejectScan: (id: string) => Promise<void>;
   updateDoctorScan: ({ id, startTime, endTime, description }) => Promise<void>;
   fetchScanCentres: () => Promise<void>;
+  completeScan: (formData: FormData, scanId: string) => Promise<Scan>;
+  updateScanDocument: (formData: FormData, scanId: string) => Promise<Scan>;
 }
 
 interface ScanCentre {
@@ -195,7 +183,7 @@ export const ScansProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     setError(null);
     try {
-      await axiosInstance.patch(`/scan/${id}/scheduled`, {
+      await axiosInstance.patch(`/scan/${id}/accepted/updateStatus`, {
         withCredentials: true,
       });
 
@@ -212,7 +200,7 @@ export const ScansProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     setError(null);
     try {
-      await axiosInstance.patch(`/scan/${id}/rejected`, {
+      await axiosInstance.patch(`/scan/${id}/rejected/updateStatus`, {
         withCredentials: true,
       });
       await fetchScan();
@@ -239,6 +227,44 @@ export const ScansProvider = ({ children }: { children: ReactNode }) => {
       await fetchAppointments();
     } catch (err: any) {
       setError(err.response?.data?.message || "Error updating Scan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeScan = async (formData: FormData, scanId: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axiosInstance.post(
+        `/scan/${scanId}/complete`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      return response.data;
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Scan Document Upload failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateScanDocument = async (formData: FormData, scanId: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axiosInstance.patch(`/scan/${scanId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      return response.data;
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Scan Document Upload failed");
     } finally {
       setLoading(false);
     }
@@ -278,6 +304,8 @@ export const ScansProvider = ({ children }: { children: ReactNode }) => {
         updateDoctorScan,
         fetchScanCentres,
         scanCentres,
+        completeScan,
+        updateScanDocument,
       }}
     >
       {children}

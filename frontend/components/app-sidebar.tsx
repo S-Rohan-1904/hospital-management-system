@@ -60,6 +60,7 @@ export function AppSidebar() {
   const { setHospitals } = useHospitalsContext();
   const { logout } = useAuthContext();
   const router = useRouter();
+  const { currentUser } = useAuthContext();
   const handleSignOut = async () => {
     try {
       await logout();
@@ -99,7 +100,7 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  <User2 /> Username
+                  <User2 /> {currentUser?.fullName}
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>

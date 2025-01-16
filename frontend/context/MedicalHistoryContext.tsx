@@ -11,33 +11,25 @@ import {
 
 interface Patient {
   _id: string;
-  username: string;
   email: string;
   fullName: string;
-  avatar: string; // URL to avatar image
-  password: string; // Hashed password
+  avatar: string;
   address: string;
-  role: string; // Typically "patient"
-  gender: string; // "male", "female", etc.
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
-  __v: number;
-  refreshToken: string;
+  role: string;
+  gender: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Doctor {
   _id: string;
-  username: string;
   email: string;
   fullName: string;
-  avatar: string; // URL to avatar image
-  role: string; // Typically "doctor"
+  avatar: string;
+  role: string;
   specialization: string;
-  __v: number;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
-  password: string; // Hashed password
-  refreshToken: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Hospital {
@@ -45,14 +37,13 @@ interface Hospital {
   _id: string;
   name: string;
   address: string;
-  contact: string; // Contact number
-  doctors: string[]; // Array of doctor IDs
-  __v: number;
+  contact: string;
+  doctors: string[];
 }
 
 interface Location {
-  type: string; // Typically "Point"
-  coordinates: [number, number]; // [longitude, latitude]
+  type: string;
+  coordinates: [number, number];
 }
 
 interface MedicalHistory {
@@ -60,13 +51,13 @@ interface MedicalHistory {
   patient: Patient;
   doctor: Doctor;
   hospital: Hospital;
-  startDate: string; // ISO date string
-  endDate: string; // ISO date string
-  scanDocuments: string[]; // Array of document URLs
+  startDate: string;
+  endDate: string;
+  scanDocuments: string[];
   diagnosis: string;
   description: string;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface MedcialHistoryContextType {

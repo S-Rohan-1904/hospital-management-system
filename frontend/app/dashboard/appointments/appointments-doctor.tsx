@@ -99,6 +99,18 @@ export function AppointmentsDoctor() {
     console.log(appointments);
   }, [appointments]);
 
+  const handleDownload = (scanDocument) => {
+    // Trigger the download programmatically
+    const anchor = document.createElement("a");
+    anchor.href = scanDocument;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.download = "";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  };
+
   async function handleDelete(id: string) {
     try {
       await deleteScan(id);
@@ -186,65 +198,100 @@ export function AppointmentsDoctor() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Button
-                    variant="default"
-                    className="bg-green-400 hover:bg-green-500"
-                    onClick={() => acceptAppointmentHandler(appointment._id)}
-                    disabled={appointment.status !== "pending"}
-                  >
-                    Approve
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="destructive"
-                    onClick={() => rejectAppointmentHandler(appointment._id)}
-                    disabled={appointment.status !== "pending"}
-                  >
-                    Reject
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="default"
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      setFormOpen(true);
-                    }}
-                    disabled={
-                      !["scheduled", "rescheduled"].includes(appointment.status)
-                    }
-                  >
-                    Update Appointment
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="default"
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      setScanRequestFormOpen(true);
-                    }}
-                    disabled={
-                      !["scheduled", "rescheduled"].includes(appointment.status)
-                    }
-                  >
-                    {appointment.hasScanRequest
-                      ? "Update Scan Request"
-                      : "Create Scan Request"}
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      setDeleteDialogOpen(true);
-                    }}
-                    disabled={!appointment.hasScanRequest}
-                  >
-                    Delete Scan Request
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="w-4 h-4" />
+                        <span className="sr-only">Actions</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {appointment.status === "pending" && (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            acceptAppointmentHandler(appointment._id)
+                          }
+                        >
+                          Approve Appointment
+                        </DropdownMenuItem>
+                      )}
+                      {appointment.status === "pending" && (
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() =>
+                            rejectAppointmentHandler(appointment._id)
+                          }
+                        >
+                          Reject Appointment
+                        </DropdownMenuItem>
+                      )}
+                      {appointment.hasScanRequest &&
+                        appointment.scanRequest.status === "completed" && (
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleDownload(
+                                appointment?.scanRequest?.scanDocument
+                              )
+                            }
+                          >
+                            Download Scan
+                          </DropdownMenuItem>
+                        )}
+
+                      {["scheduled", "rescheduled"].includes(
+                        appointment.status
+                      ) && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedAppointment(appointment);
+                            setFormOpen(true);
+                          }}
+                        >
+                          Update Appointment
+                        </DropdownMenuItem>
+                      )}
+                      {appointment.hasScanRequest &&
+                        ["rejected", "pending"].includes(
+                          appointment?.scanRequest?.status
+                        ) && (
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              setSelectedAppointment(appointment);
+                              setDeleteDialogOpen(true);
+                            }}
+                            disabled={
+                              !appointment.hasScanRequest ||
+                              (appointment.hasScanRequest &&
+                                appointment.scanRequest.status === "completed")
+                            }
+                          >
+                            Delete Scan Request
+                          </DropdownMenuItem>
+                        )}
+
+                      {appointment.hasScanRequest &&
+                        appointment.scanRequest.status !== "completed" &&
+                        ["scheduled", "rescheduled"].includes(
+                          appointment.status
+                        ) && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedAppointment(appointment);
+                              setScanRequestFormOpen(true);
+                            }}
+                            disabled={
+                              appointment.hasScanRequest &&
+                              appointment.scanRequest.status === "completed"
+                            }
+                          >
+                            {appointment.hasScanRequest
+                              ? "Update Scan Request"
+                              : "Create Scan Request"}
+                          </DropdownMenuItem>
+                        )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}

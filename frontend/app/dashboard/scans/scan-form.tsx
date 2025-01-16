@@ -1,6 +1,7 @@
 "use client";
 
-import { AppointmentInterface } from "@/app/dashboard/appointments/appointments-client";
+import { ScanInterface } from "./scan-client";
+import { AppointmentInterface } from "@/app/dashboard/appointments/appointments-doctor";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,212 +18,128 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
+import { useScansContext } from "@/context/ScansContext";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { add } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-interface AppointmentFormProps {
+interface ScanFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  appointment?: AppointmentInterface | null;
+  scan: ScanInterface | null;
 }
 
-export function AppointmentForm({
-  open,
-  onOpenChange,
-  appointment = null,
-}: AppointmentFormProps) {
-  const { hospitals } = useHospitalsContext();
-
-  const { requestAppointment, updateAppointment } = useAppointmentsContext();
-  const [startDate, setStartDate] = useState<string>(
-    format(
-      toZonedTime(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone),
-      "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-    )
+export function ScanForm({ open, onOpenChange, scan = null }: ScanFormProps) {
+  const { requestScan, updateScan, scanCentres } = useScansContext();
+  const [scanDescription, setScanDescription] = useState(
+    scan?.description || ""
   );
-
-  const [endDate, setEndDate] = useState<string>(
-    format(
-      toZonedTime(
-        add(new Date(), { minutes: 30 }),
-        Intl.DateTimeFormat().resolvedOptions().timeZone
-      ),
-      "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-    )
-  );
-
-  const [selectedHospital, setSelectedHospital] = useState<string>("");
-  const [selectedDoctor, setSelectedDoctor] = useState<string>("");
+  const [selectedScanCentre, setSelectedScanCentre] = useState<string>("");
+  const { fetchAppointments } = useAppointmentsContext();
   const { toast } = useToast();
 
-  const handleSelectChangeHospital = (value) => {
-    setSelectedHospital(value);
-  };
-
-  const handleSelectChangeDoctor = (value) => {
-    setSelectedDoctor(value);
-  };
+  useEffect(() => {
+    if (scan) {
+      setScanDescription(scan.description);
+      setSelectedScanCentre(scan.scanCentre);
+    } else {
+      setScanDescription("");
+      setSelectedScanCentre("");
+    }
+  }, [scan]);
 
   useEffect(() => {
-    if (appointment) {
-      setStartDate(appointment.startTime);
-      setEndDate(appointment.endTime);
-      setSelectedHospital(appointment?.hospital?._id);
-      setSelectedDoctor(appointment?.doctor?._id);
-    } else {
-      setStartDate(
-        format(
-          toZonedTime(
-            new Date(),
-            Intl.DateTimeFormat().resolvedOptions().timeZone
-          ),
-          "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-        )
-      );
-      setEndDate(
-        format(
-          toZonedTime(
-            add(new Date(), { minutes: 30 }),
-            Intl.DateTimeFormat().resolvedOptions().timeZone
-          ),
-          "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-        )
-      );
-      setSelectedHospital("");
-      setSelectedDoctor("");
-    }
-  }, [appointment]);
+    console.log(scan);
+  }, [scan]);
+
+  useEffect(() => {
+    console.log(selectedScanCentre);
+  }, [selectedScanCentre]);
 
   const router = useRouter();
 
   async function handleSubmit() {
-    try {
-      if (appointment) {
-        await updateAppointment({
-          id: appointment._id,
-          startTime: startDate,
-          endTime: endDate,
-          doctor: selectedDoctor,
-          hospital: selectedHospital,
-        });
-      } else {
-        await requestAppointment({
-          startTime: startDate,
-          endTime: endDate,
-          doctorId: selectedDoctor,
-          hospitalId: selectedHospital,
-        });
-
-        console.log(startDate, endDate);
-
-        console.log("appointment request created");
-      }
-      router.refresh();
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "There was an issue with your request. Please try again.",
-        variant: "destructive",
-      });
-      console.error("Error submitting form:", error);
-    }
+    // try {
+    //   if (scan) {
+    //     await updateScan({
+    //       id: scan._id,
+    //       description: scanDescription,
+    //       scanCentre: selectedScanCentre,
+    //     });
+    //     await fetchAppointments();
+    //     console.log("Scan request updated");
+    //   } else {
+    //     await requestScan({
+    //       scanCentre: selectedScanCentre,
+    //       appointment: appointmentId,
+    //       description: scanDescription,
+    //     });
+    //     await fetchAppointments();
+    //   }
+    //   router.refresh();
+    //   setSelectedAppointment(null);
+    //   onOpenChange(false);
+    // } catch (error) {
+    //   toast({
+    //     title: "Error",
+    //     description: "There was an issue with your request. Please try again.",
+    //     variant: "destructive",
+    //   });
+    //   console.error("Error submitting form:", error);
+    // }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby="-description">
         <DialogHeader>
-          <DialogTitle>
-            {appointment ? "Edit Appointment" : "Create Appointment"}
-          </DialogTitle>
+          <DialogTitle>{scan ? "Edit Scan" : "Create Scan"}</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4" id="-description">
           <div className="space-y-2 w-[45%]">
-            <Label htmlFor="start-date">Start Date & Time</Label>
-            <Input
-              id="start-date"
-              name="start-date"
-              type="datetime-local"
-              required
-              value={startDate.slice(0, 16)}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2 w-[45%]">
-            <Label htmlFor="end-date">End Date & Time</Label>
-            <Input
-              id="end-date"
-              name="end-date"
-              type="datetime-local"
-              required
-              value={endDate.slice(0, 16)}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2 w-[45%]">
-            <Label htmlFor="hospital">Hospital</Label>
+            <Label htmlFor="scan">Scan Centre</Label>
             <Select
-              name="hospital"
-              value={selectedHospital}
-              onValueChange={(value) => handleSelectChangeHospital(value)}
+              name="scan"
+              value={selectedScanCentre}
+              onValueChange={(value) => setSelectedScanCentre(value)}
+              required
             >
               <SelectTrigger>
-                <SelectValue placeholder="Pick a hospital" />
+                <SelectValue placeholder="Pick a scan" />
               </SelectTrigger>
 
               <SelectContent>
-                {hospitals.map((hospital, index) => (
-                  <SelectItem value={hospital._id} key={index}>
-                    {hospital.name}
+                {scanCentres.map((scanCentre, index) => (
+                  <SelectItem value={scanCentre._id} key={index}>
+                    {scanCentre.fullName}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2 w-[45%]">
-            <Label htmlFor="doctor">Doctor</Label>
-            <Select
-              name="doctor"
-              value={selectedDoctor}
-              onValueChange={handleSelectChangeDoctor}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pick a doctor" />
-              </SelectTrigger>
-
-              <SelectContent>
-                {hospitals
-                  .filter((hospital) => hospital._id === selectedHospital)
-                  .map((hospital) =>
-                    hospital.doctors.map((doctor, index) => (
-                      <SelectItem value={doctor._id} key={index}>
-                        {doctor.fullName}
-                      </SelectItem>
-                    ))
-                  )}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="scan-description">Description</Label>
+            <Textarea
+              value={scanDescription}
+              onChange={(e) => setScanDescription(e.target.value)}
+              required
+            />
           </div>
 
           <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={[
-                selectedHospital,
-                selectedDoctor,
-                startDate,
-                endDate,
-              ].some((x) => x === "")}
+              disabled={[scanDescription, selectedScanCentre].some(
+                (x) => x === ""
+              )}
             >
-              {appointment ? "Update" : "Create"}
+              {scan ? "Update" : "Create"}
             </Button>
           </div>
         </form>

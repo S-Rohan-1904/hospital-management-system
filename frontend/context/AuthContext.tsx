@@ -25,17 +25,14 @@ interface LogoutResponse {
 
 interface BaseUser {
   _id: string;
-  username: string;
   email: string;
   fullName: string;
   avatar: string;
   address: string;
   role: Role;
-  __v: number;
   createdAt: string;
   updatedAt: string;
   gender?: Gender;
-  googleId?: string;
 }
 
 interface AuthResponseDoctor extends BaseUser {
