@@ -330,9 +330,14 @@ const updateAppointment = asyncHandler(async (req, res) => {
     }
 
     if ("startTime" in updateFields && "endTime" in updateFields) {
+      const updatedStartTimeUTC = new Date(updateFields.startTime).toISOString();
+      const updatedEndTimeUTC = new Date(updateFields.endTime).toISOString();
+      const appointmentStartTimeUTC = new Date(appointment.startTime).toISOString();
+      const appointmentEndTimeUTC = new Date(appointment.endTime).toISOString();
+
       if (
-        updateFields.startTime !== appointment.startTime ||
-        updateFields.endTime !== appointment.endTime
+        updatedStartTimeUTC !== appointmentStartTimeUTC ||
+        updatedEndTimeUTC !== appointmentEndTimeUTC
       ) {
         updateFields.status = "rescheduled";
       }
