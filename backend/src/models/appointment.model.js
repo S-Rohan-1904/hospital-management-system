@@ -17,6 +17,10 @@ const appointmentSchema = new Schema({
     enum: ["scheduled", "rescheduled", "rejected", "pending"],
   },
   description: String,
+  onlineAppointment: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 export const Appointment = mongoose.model("Appointment", appointmentSchema);

@@ -39,7 +39,7 @@ const userSchema = Schema(
     },
     role: {
       type: String,
-      enum: ["doctor", "patient", "scanCentre"],
+      enum: ["doctor", "patient", "scanCentre", "hospital", "nurse"],
       required: true,
     },
     googleId: {
