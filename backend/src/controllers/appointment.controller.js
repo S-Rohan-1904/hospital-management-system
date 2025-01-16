@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { Appointment } from "../models/appointment.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { Hospital } from "../models/hospital.model.js";
+import mongoose from "mongoose";
 
 const isDoctorFree = async (doctorId, startTime, endTime) => {
   const overlappingAppointments = await Appointment.find({
@@ -249,12 +250,12 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
     {
       $unwind: "$doctorDetails",
     },
-  
+
     // Unwind hospital details
     {
       $unwind: "$hospitalDetails",
     },
-  
+
     // Add hasScanRequest key
     {
       $addFields: {
@@ -267,7 +268,7 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
         },
       },
     },
-  
+
     // Project the required fields
     {
       $project: {
@@ -297,9 +298,8 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
       },
     },
   ];
-  
+
   const appointments = await Appointment.aggregate(pipeline);
-  
 
   return res
     .status(200)
@@ -443,6 +443,119 @@ const deleteAppointment = asyncHandler(async (req, res) => {
       )
     );
 });
+
+const getDoctorAppointments = asyncHandler(async (req, res) => {
+  const { role } = req.user;
+  const { startDate, endDate } = req.body;
+
+  if (!["patient", "doctor", "hospital"].includes(role)) {
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
+  }
+
+  let doctorId;
+
+  if (role === "patient" || role === "hospital") {
+    doctorId = req.body.id;
+  } else {
+    doctorId = req.user._id;
+  }
+
+  const pipeline = [
+    {
+      $match: { doctor: new mongoose.Types.ObjectId(doctorId) },
+    },
+    {
+      $match: {
+        startTime: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "patient",
+        foreignField: "_id",
+        as: "patientDetails",
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "doctor",
+        foreignField: "_id",
+        as: "doctorDetails",
+      },
+    },
+    {
+      $lookup: {
+        from: "hospitals",
+        localField: "hospital",
+        foreignField: "_id",
+        as: "hospitalDetails",
+      },
+    },
+    {
+      $unwind: "$patientDetails",
+    },
+
+    {
+      $unwind: "$doctorDetails",
+    },
+
+    // Unwind hospital details
+    {
+      $unwind: "$hospitalDetails",
+    },
+
+    // Project the required fields
+    {
+      $project: {
+        _id: 1,
+        startTime: 1,
+        endTime: 1,
+        status: 1,
+        description: 1,
+        patient: {
+          _id: "$patientDetails._id",
+          fullName: "$patientDetails.fullName",
+          email: "$patientDetails.email",
+        },
+        doctor: {
+          _id: "$doctorDetails._id",
+          fullName: "$doctorDetails.fullName",
+          email: "$doctorDetails.email",
+          specialization: "$doctorDetails.specialization",
+        },
+        hospital: {
+          _id: "$hospitalDetails._id",
+          name: "$hospitalDetails.name",
+          address: "$hospitalDetails.address",
+        },
+      },
+    },
+  ];
+
+  try {
+    const appointments = await Appointment.aggregate(pipeline);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, appointments, "Appointments fetched"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          {},
+          error.message || "Could not fetch appointments"
+        )
+      );
+  }
+});
+
 export {
   requestAppointment,
   approveOrRejectAppointment,
@@ -450,4 +563,5 @@ export {
   getAppointmentsById,
   updateAppointment,
   deleteAppointment,
+  getDoctorAppointments,
 };
