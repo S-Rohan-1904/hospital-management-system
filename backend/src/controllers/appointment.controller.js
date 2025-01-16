@@ -28,17 +28,17 @@ const requestAppointment = asyncHandler(async (req, res) => {
       .json(new ApiResponse(401, {}, "Unauthorized request"));
   }
 
-  const { doctorId, startTime, endTime, hospitalId } = req.body;
+  const { doctorId, startTime, endTime, hospitalId, onlineAppointment } = req.body;
 
-  if (
-    [doctorId, startTime, endTime, hospitalId].some(
-      (field) => !field || field.trim() == ""
-    )
-  ) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, {}, "All fields are required"));
-  }
+  // if (
+  //   [doctorId, startTime, endTime, hospitalId].some(
+  //     (field) => !field || field.trim() == ""
+  //   )
+  // ) {
+  //   return res
+  //     .status(400)
+  //     .json(new ApiResponse(400, {}, "All fields are required"));
+  // }
 
   const isDoctorFreeBoolean = await isDoctorFree(doctorId, startTime, endTime);
 
@@ -55,6 +55,7 @@ const requestAppointment = asyncHandler(async (req, res) => {
     startTime,
     endTime,
     status: "pending",
+    onlineAppointment,
   });
 
   if (!appointment) {
