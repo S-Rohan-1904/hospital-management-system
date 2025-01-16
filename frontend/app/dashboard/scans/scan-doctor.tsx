@@ -2,6 +2,7 @@
 
 import Loading from "../loading";
 import { ScanDescription } from "./scan-description";
+import { ScanForm } from "./scan-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,

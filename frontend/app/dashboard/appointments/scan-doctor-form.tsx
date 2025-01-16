@@ -28,7 +28,7 @@ import { toZonedTime } from "date-fns-tz";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
-interface ScanInterface {
+export interface ScanInterface {
   _id: string;
   patient: string;
   doctor: string;
