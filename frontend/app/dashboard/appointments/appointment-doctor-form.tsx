@@ -51,10 +51,20 @@ export function AppointmentDoctorForm({
   const [description, setDescription] = useState<string>("");
   const { toast } = useToast();
 
+  function convertUTCToLocal(utcDateString) {
+    const utcDate = new Date(utcDateString);
+    const localDate = new Date(
+      utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
+    );
+    return localDate.toISOString().slice(0, 19);
+  }
+
   useEffect(() => {
     if (appointment) {
-      setStartDate(appointment.startTime);
-      setEndDate(appointment.endTime);
+      const localStartTime = convertUTCToLocal(appointment.startTime);
+      const localEndTime = convertUTCToLocal(appointment.endTime);
+      setStartDate(localStartTime);
+      setEndDate(localEndTime);
       setDescription(appointment.description);
     } else {
       setStartDate(

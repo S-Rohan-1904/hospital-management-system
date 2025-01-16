@@ -158,7 +158,7 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
     try {
       await axiosInstance.post(
         `/appointments`,
-        { doctorId, startTime, endTime, hospitalId },
+        { doctorId, startTime, endTime, hospitalId, onlineAppointment: false },
         {
           withCredentials: true,
         }

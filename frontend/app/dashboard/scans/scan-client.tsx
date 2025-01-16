@@ -2,7 +2,6 @@
 
 import Loading from "../loading";
 import { ScanDescription } from "./scan-description";
-import { ScanForm } from "./scan-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,7 +88,6 @@ export function ScansClientPage() {
   const router = useRouter();
   const { completeScan, updateScanDocument, loading, error } =
     useScansContext();
-  const [formOpen, setFormOpen] = useState(false);
   const [selectedScan, setSelectedScan] = useState<ScanInterface | null>(null);
   const [showDescription, setShowDescription] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -290,12 +288,6 @@ export function ScansClientPage() {
         open={showDescription}
         onOpenChange={setShowDescription}
         description={selectedScan?.description}
-      />
-
-      <ScanForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        scan={selectedScan}
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
