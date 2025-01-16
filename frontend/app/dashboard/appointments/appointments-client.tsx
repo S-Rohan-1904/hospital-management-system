@@ -87,6 +87,17 @@ export function AppointmentsClient() {
     }
   }
 
+  const handleDownload = (scanDocument) => {
+    const anchor = document.createElement("a");
+    anchor.href = scanDocument;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.download = "";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  };
+
   if (loading) {
     return <Loading />;
   }
@@ -191,6 +202,18 @@ export function AppointmentsClient() {
                           Show Description
                         </DropdownMenuItem>
                       )}
+                      {appointment.hasScanRequest &&
+                        appointment.scanRequest.status === "completed" && (
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleDownload(
+                                appointment?.scanRequest?.scanDocument
+                              )
+                            }
+                          >
+                            Download Scan
+                          </DropdownMenuItem>
+                        )}
                       {appointment.status === "pending" && (
                         <DropdownMenuItem
                           className="text-destructive"
