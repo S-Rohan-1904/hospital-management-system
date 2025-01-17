@@ -26,7 +26,6 @@ const generateAccessAndRefreshToken = async (userId) => {
 };
 const registerUser = asyncHandler(async (req, res) => {
   const {
-    username,
     email,
     password,
     fullName,
@@ -37,14 +36,14 @@ const registerUser = asyncHandler(async (req, res) => {
   } = req.body;
 
   // if (
-  //   [username, email, password, fullName, role, address, gender].some(
+  //   [ email, password, fullName, role, address, gender].some(
   //     (field) => !field || field.trim() == ""
   //   )
   // ) {
   //   throw new ApiError(res, 400, "All fields are required");
   // }
 
-  const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+  const existingUser = await User.findOne({ email });
 
   if (existingUser) {
     return res
@@ -75,7 +74,6 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const userData = {
-    username: username.toLowerCase(),
     email: email.toLowerCase(),
     fullName: fullName.trim(),
     avatar: avatar.url,

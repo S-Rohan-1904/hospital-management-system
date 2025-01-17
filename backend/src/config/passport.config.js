@@ -15,7 +15,6 @@ passport.use(
           { googleId: profile.id },
           {
             $setOnInsert: {
-              username: profile.displayName,
               fullName: profile.displayName,
               email: profile.emails[0].value,
               avatar: profile._json.picture,
