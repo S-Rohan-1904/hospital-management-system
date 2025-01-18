@@ -14,17 +14,17 @@ const io = new Server(server, {
   },
 });
 
-let roomUsers = {}; 
+let roomUsers = {};
 
 io.on("connection", (socket) => {
   io.emit("users_response", roomUsers);
   console.log(`User Connected: ${socket.id}`);
 
-  socket.on("join_room", (roomId) => { 
+  socket.on("join_room", (roomId) => {
     socket.join(roomId);
     roomUsers = {
       ...roomUsers,
-      [roomId]: [...(roomUsers[roomId] || []), socket.id], 
+      [roomId]: [...(roomUsers[roomId] || []), socket.id],
     };
 
     io.emit("users_response", roomUsers);
@@ -34,28 +34,26 @@ io.on("connection", (socket) => {
   socket.on("send_message", async (data) => {
     try {
       const { roomId, senderId, text, createdAt } = data;
-  
+
       const message = new ChatMessage({
-        chatGroup: roomId,  
-        sender: senderId,   
-        message: text,      
-        createdAt  
+        chatGroup: roomId,
+        sender: senderId,
+        message: text,
+        createdAt,
       });
-  
+
       await message.save();
-  
+
       io.to(roomId).emit("receive_message", {
         chatGroup: roomId,
         sender: senderId,
         message: text,
         createdAt: message.createdAt,
       });
-  
     } catch (error) {
       console.error("Error saving message:", error);
     }
   });
-  
 
   socket.on("typing", (data) => {
     socket.broadcast.emit("typing_response", data);
@@ -97,7 +95,7 @@ import hospitalRouter from "./routes/hospital.routes.js";
 import appointmentRouter from "./routes/appointment.routes.js";
 import scanRequestRouter from "./routes/scanRequest.routes.js";
 import medicalHistoryRouter from "./routes/medicalHistory.routes.js";
-import chatRouter from "./routes/chat.routes.js"
+import chatRouter from "./routes/chat.routes.js";
 
 app.use("/api/v1/users/", userRouter);
 app.use("/api/v1/appointments/", appointmentRouter);

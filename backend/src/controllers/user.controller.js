@@ -18,15 +18,8 @@ const generateAccessAndRefreshToken = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  const {
-    email,
-    password,
-    fullName,
-    role,
-    address,
-    gender,
-    specialization,
-  } = req.body;
+  const { email, password, fullName, role, address, gender, specialization } =
+    req.body;
 
   // if (
   //   [ email, password, fullName, role, address, gender].some(

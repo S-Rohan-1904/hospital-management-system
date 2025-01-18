@@ -36,7 +36,7 @@ const userSchema = Schema(
     },
     googleId: {
       type: String,
-      required: false
+      required: false,
     },
     gender: {
       type: String,
@@ -54,10 +54,12 @@ const userSchema = Schema(
         message: "Specialization is required for doctors",
       },
     },
-    chatGroups: [{
-      type: Schema.Types.ObjectId,
-      ref: 'ChatGroup',
-    }],
+    chatGroups: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "ChatGroup",
+      },
+    ],
   },
   {
     timestamps: true,

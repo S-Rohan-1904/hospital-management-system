@@ -137,20 +137,19 @@ const getMedicalHistories = asyncHandler(async (req, res) => {
 
   const medicalHistories = await MedicalHistory.find(filter)
     .populate([
-        {
-            path: "patient",
-            select: "-password -refreshToken"
-        },
-        {
-            path: "doctor",
-            select: "-password -refreshToken"
-        },
-        {
-            path: "hospital"
-        }
+      {
+        path: "patient",
+        select: "-password -refreshToken",
+      },
+      {
+        path: "doctor",
+        select: "-password -refreshToken",
+      },
+      {
+        path: "hospital",
+      },
     ])
     .exec();
-
 
   if (!medicalHistories) {
     return res
@@ -180,38 +179,37 @@ const getMedicalHistoryById = asyncHandler(async (req, res) => {
   let medicalHistory;
 
   if (type === "doctor") {
-    medicalHistory = await MedicalHistory.find({doctor: id})
-    .populate([
+    medicalHistory = await MedicalHistory.find({ doctor: id })
+      .populate([
         {
-            path: "patient",
-            select: "-password -refreshToken"
+          path: "patient",
+          select: "-password -refreshToken",
         },
         {
-            path: "doctor",
-            select: "-password -refreshToken"
+          path: "doctor",
+          select: "-password -refreshToken",
         },
         {
-            path: "hospital"
-        }
-    ])
-    .exec();
-
+          path: "hospital",
+        },
+      ])
+      .exec();
   } else if (type === "patient") {
-    medicalHistory = await MedicalHistory.find({patient: id})
-    .populate([
+    medicalHistory = await MedicalHistory.find({ patient: id })
+      .populate([
         {
-            path: "patient",
-            select: "-password -refreshToken"
+          path: "patient",
+          select: "-password -refreshToken",
         },
         {
-            path: "doctor",
-            select: "-password -refreshToken"
+          path: "doctor",
+          select: "-password -refreshToken",
         },
         {
-            path: "hospital"
-        }
-    ])
-    .exec();
+          path: "hospital",
+        },
+      ])
+      .exec();
   }
 
   if (medicalHistory.length === 0) {
@@ -295,9 +293,7 @@ const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
   const { role: userRole } = req.user;
 
   if (!["doctor", "patient"].includes(userRole)) {
-    return res
-      .status(403)
-      .json(new ApiResponse(403, {}, "Forbidden request"));
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
   // Utility function to format date to "29th Jan 2025"

@@ -1,9 +1,7 @@
 import axios from "axios";
 import asyncHandler from "../utils/asyncHandler.js";
-import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { Hospital } from "../models/hospital.model.js";
-import { User } from "../models/user.model.js";
 
 async function getAccessToken() {
   try {
@@ -69,7 +67,6 @@ const getNearbyHospital = asyncHandler(async (req, res) => {
       }
     );
 
-    console.log(nearbyHospitals.data)
     if (nearbyHospitals.data.suggestedLocations.length === 0) {
       return res
         .status(500)

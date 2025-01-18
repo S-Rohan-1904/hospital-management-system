@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { createChat, getChatUsersBasedOnRole, getUserChats } from "../controllers/chat.controller.js";
+import {
+  createChat,
+  getChatUsersBasedOnRole,
+  getUserChats,
+} from "../controllers/chat.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { validate } from "../middlewares/validator.middleware.js";
 

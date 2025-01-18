@@ -15,7 +15,10 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { validate } from "../middlewares/validator.middleware.js";
 import { registerUserSchema } from "../schemas/registration.schema.js";
 import { loginUserSchema } from "../schemas/login.schema.js";
-import { updatePasswordSchema, updateUserDetailsSchema } from "../schemas/user.schema.js";
+import {
+  updatePasswordSchema,
+  updateUserDetailsSchema,
+} from "../schemas/user.schema.js";
 
 const router = Router();
 
@@ -30,9 +33,13 @@ router
 router.route("/login").post(validate(loginUserSchema), loginUser);
 router.route("/logout").get(verifyJWT, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
-router.route("/change-password").post(verifyJWT, validate(updatePasswordSchema), changeCurrentPassword);
+router
+  .route("/change-password")
+  .post(verifyJWT, validate(updatePasswordSchema), changeCurrentPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
-router.route("/update-account").patch(verifyJWT, validate(updateUserDetailsSchema), updateAccountDetails);
+router
+  .route("/update-account")
+  .patch(verifyJWT, validate(updateUserDetailsSchema), updateAccountDetails);
 router
   .route("/avatar")
   .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
