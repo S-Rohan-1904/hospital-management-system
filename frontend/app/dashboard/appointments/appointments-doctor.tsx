@@ -32,6 +32,7 @@ import {
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useScansContext } from "@/context/ScansContext";
 import { format, set } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { AlertCircle, Calendar, Clock, MoreVertical, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
@@ -172,13 +173,28 @@ export function AppointmentsDoctor() {
                   <div className="flex items-center text-muted-foreground">
                     <Calendar className="w-4 h-4 mr-2" />
                     {format(
-                      new Date(appointment?.startTime),
+                      toZonedTime(
+                        new Date(),
+                        Intl.DateTimeFormat().resolvedOptions().timeZone
+                      ),
                       "dd/MM/yyyy"
                     )}{" "}
                     <Clock className="w-4 h-4 ml-4 mr-2" />
-                    {format(new Date(appointment?.startTime), "hh:mm a")}
+                    {format(
+                      toZonedTime(
+                        new Date(appointment?.startTime),
+                        Intl.DateTimeFormat().resolvedOptions().timeZone
+                      ),
+                      "hh:mm a"
+                    )}
                     {" - "}
-                    {format(new Date(appointment?.endTime), "hh:mm a")}
+                    {format(
+                      toZonedTime(
+                        new Date(appointment?.endTime),
+                        Intl.DateTimeFormat().resolvedOptions().timeZone
+                      ),
+                      "hh:mm a"
+                    )}
                   </div>
                 </TableCell>
 
@@ -250,23 +266,18 @@ export function AppointmentsDoctor() {
                           Update Appointment
                         </DropdownMenuItem>
                       )}
-                      {appointment.hasScanRequest &&
-                        ["rejected", "pending"].includes(
-                          appointment?.scanRequest?.status
+
+                      {!appointment.hasScanRequest &&
+                        ["scheduled", "rescheduled"].includes(
+                          appointment.status
                         ) && (
                           <DropdownMenuItem
-                            className="text-destructive"
                             onClick={() => {
                               setSelectedAppointment(appointment);
-                              setDeleteDialogOpen(true);
+                              setScanRequestFormOpen(true);
                             }}
-                            disabled={
-                              !appointment.hasScanRequest ||
-                              (appointment.hasScanRequest &&
-                                appointment.scanRequest.status === "completed")
-                            }
                           >
-                            Delete Scan Request
+                            Create Scan Request
                           </DropdownMenuItem>
                         )}
 
@@ -288,6 +299,25 @@ export function AppointmentsDoctor() {
                             {appointment.hasScanRequest
                               ? "Update Scan Request"
                               : "Create Scan Request"}
+                          </DropdownMenuItem>
+                        )}
+                      {appointment.hasScanRequest &&
+                        ["rejected", "pending"].includes(
+                          appointment?.scanRequest?.status
+                        ) && (
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              setSelectedAppointment(appointment);
+                              setDeleteDialogOpen(true);
+                            }}
+                            disabled={
+                              !appointment.hasScanRequest ||
+                              (appointment.hasScanRequest &&
+                                appointment.scanRequest.status === "completed")
+                            }
+                          >
+                            Delete Scan Request
                           </DropdownMenuItem>
                         )}
                     </DropdownMenuContent>

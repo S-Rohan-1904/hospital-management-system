@@ -69,10 +69,20 @@ export function AppointmentForm({
     setSelectedDoctor(value);
   };
 
+  function convertUTCToLocal(utcDateString) {
+    const utcDate = new Date(utcDateString);
+    const localDate = new Date(
+      utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
+    );
+    return localDate.toISOString().slice(0, 19);
+  }
+
   useEffect(() => {
     if (appointment) {
-      setStartDate(appointment.startTime);
-      setEndDate(appointment.endTime);
+      const localStartTime = convertUTCToLocal(appointment.startTime);
+      const localEndTime = convertUTCToLocal(appointment.endTime);
+      setStartDate(localStartTime);
+      setEndDate(localEndTime);
       setSelectedHospital(appointment?.hospital?._id);
       setSelectedDoctor(appointment?.doctor?._id);
     } else {
