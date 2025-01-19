@@ -117,9 +117,7 @@ export function AppointmentsClient() {
         </Button>
       </div>
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+        <Alert variant="destructive" className="my-2 flex-col justify-center">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}

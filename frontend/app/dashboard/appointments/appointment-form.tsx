@@ -59,6 +59,7 @@ export function AppointmentForm({
 
   const [selectedHospital, setSelectedHospital] = useState<string>("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSelectChangeHospital = (value) => {
@@ -113,23 +114,29 @@ export function AppointmentForm({
 
   async function handleSubmit() {
     try {
+      if (startDate > endDate) {
+        setError("End time must be after start time");
+        return;
+      }
       if (appointment) {
+        const localStartDate = convertUTCToLocal(startDate);
+        const localEndDate = convertUTCToLocal(endDate);
         await updateAppointment({
           id: appointment._id,
-          startTime: startDate,
-          endTime: endDate,
+          startTime: localStartDate,
+          endTime: localEndDate,
           doctor: selectedDoctor,
           hospital: selectedHospital,
         });
       } else {
+        const localStartDate = convertUTCToLocal(startDate);
+        const localEndDate = convertUTCToLocal(endDate);
         await requestAppointment({
-          startTime: startDate,
-          endTime: endDate,
+          startTime: localStartDate,
+          endTime: localEndDate,
           doctorId: selectedDoctor,
           hospitalId: selectedHospital,
         });
-
-        console.log(startDate, endDate);
 
         console.log("appointment request created");
       }
@@ -177,6 +184,7 @@ export function AppointmentForm({
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
+          {error && <p className="text-red-500">{error}</p>}
           <div className="space-y-2 w-[45%]">
             <Label htmlFor="hospital">Hospital</Label>
             <Select
@@ -232,7 +240,7 @@ export function AppointmentForm({
                 endDate,
               ].some((x) => x === "")}
             >
-              {appointment ? "Update" : "Create"}
+              {appointment ? "Update" : "Request"}
             </Button>
           </div>
         </form>

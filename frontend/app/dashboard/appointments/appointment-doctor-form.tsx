@@ -56,6 +56,8 @@ export function AppointmentDoctorForm({
     const localDate = new Date(
       utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
     );
+    console.log(localDate.toISOString().slice(0, 19));
+
     return localDate.toISOString().slice(0, 19);
   }
 
@@ -63,6 +65,8 @@ export function AppointmentDoctorForm({
     if (appointment) {
       const localStartTime = convertUTCToLocal(appointment.startTime);
       const localEndTime = convertUTCToLocal(appointment.endTime);
+      console.log(localStartTime, localEndTime);
+
       setStartDate(localStartTime);
       setEndDate(localEndTime);
       setDescription(appointment.description);
@@ -93,10 +97,12 @@ export function AppointmentDoctorForm({
   async function handleSubmit() {
     try {
       if (appointment) {
+        const localStartDate = convertUTCToLocal(startDate);
+        const localEndDate = convertUTCToLocal(endDate);
         await updateDoctorAppointment({
           id: appointment._id,
-          startTime: startDate,
-          endTime: endDate,
+          startTime: localStartDate,
+          endTime: localEndDate,
           description,
         });
       }
