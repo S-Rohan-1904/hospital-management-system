@@ -158,7 +158,10 @@ export function AppointmentsDoctor() {
             <TableRow>
               <TableHead>Patient</TableHead>
               <TableHead>Date & Time</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Appointment Status</TableHead>
+              <TableHead>Scan Request Status</TableHead>
+              <TableHead>Scan Request Created At</TableHead>
+              <TableHead>Scan Request Uploaded At</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -174,7 +177,7 @@ export function AppointmentsDoctor() {
                     <Calendar className="w-4 h-4 mr-2" />
                     {format(
                       toZonedTime(
-                        new Date(),
+                        new Date(appointment?.startTime),
                         Intl.DateTimeFormat().resolvedOptions().timeZone
                       ),
                       "dd/MM/yyyy"
@@ -211,6 +214,67 @@ export function AppointmentsDoctor() {
                       }`}
                     />
                     {appointment.status}
+                  </div>
+                </TableCell>
+
+                <TableCell>
+                  <div className="flex items-center">
+                    {appointment.hasScanRequest ? (
+                      <>
+                        <div
+                          className={`h-2 w-2 rounded-full mr-2 ${
+                            {
+                              completed: "bg-green-500",
+                              accepted: "bg-orange-500",
+                              pending: "bg-yellow-500",
+                              rejected: "bg-red-500",
+                            }[appointment.scanRequest.status] || "bg-gray-500"
+                          }`}
+                        />
+                        {appointment.scanRequest.status}
+                      </>
+                    ) : (
+                      <div className="flex items-center text-muted-foreground">
+                        N/A
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center text-muted-foreground">
+                    {appointment.hasScanRequest ? (
+                      <>
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {format(
+                          toZonedTime(
+                            new Date(appointment.scanRequest.createdAt),
+                            Intl.DateTimeFormat().resolvedOptions().timeZone
+                          ),
+                          "dd/MM/yyyy"
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex items-center">N/A</div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center text-muted-foreground">
+                    {appointment.hasScanRequest &&
+                    appointment.scanRequest.dateOfUpload ? (
+                      <>
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {format(
+                          toZonedTime(
+                            new Date(appointment.scanRequest.dateOfUpload),
+                            Intl.DateTimeFormat().resolvedOptions().timeZone
+                          ),
+                          "dd/MM/yyyy"
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex items-center">N/A</div>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>

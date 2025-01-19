@@ -46,7 +46,7 @@ interface Location {
   coordinates: [number, number];
 }
 
-interface MedicalHistory {
+export interface MedicalHistory {
   _id: string;
   patient: Patient;
   doctor: Doctor;
@@ -69,6 +69,29 @@ interface MedcialHistoryContextType {
     medicalHistoryId: string
   ) => Promise<MedicalHistory[]>;
   setMedicalHistory: (medicalHistory: MedicalHistory[]) => void;
+  getAllPatients: () => Promise<Patient[]>;
+  getMedicalHistoryPDF: (email: string) => Promise<string>;
+  createMedicalHistory: (
+    patientId: string,
+    doctorId: string,
+    startDate: string,
+    endDate: string,
+    diagnosis: string,
+    description: string
+  ) => Promise<MedicalHistory>;
+  updateMedicalHistory: (
+    medicalHistoryId: string,
+    diagnosis: string,
+    description: string,
+    startDate: string,
+    endDate: string,
+    patientId: string,
+    doctorId: string
+  ) => Promise<MedicalHistory>;
+  deleteMedicalHistory: (
+    medicalHistoryId: string,
+    doctorId: string
+  ) => Promise<void>;
 }
 
 const MedicalHistoryContext = createContext<
@@ -118,6 +141,110 @@ export const MedicalHistoryProvider = ({
     }
   };
 
+  const getAllPatients = async () => {
+    try {
+      const response = await axiosInstance.get(`/users/patients`, {
+        withCredentials: true,
+      });
+      return response.data.data;
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error fetching patients");
+    }
+  };
+
+  const getMedicalHistoryPDF = async (email: string): Promise<string> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.post(
+        `/history/pdf`,
+        { email },
+        {
+          withCredentials: true,
+        }
+      );
+      return response.data.data.medicalHistoryUrl;
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || "Error fetching medical history PDF"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createMedicalHistory = async (
+    patientId: string,
+    doctorId: string,
+    startDate: string,
+    endDate: string,
+    diagnosis: string,
+    description: string
+  ) => {
+    try {
+      const response = await axiosInstance.post(
+        `/history`,
+        {
+          patient: patientId,
+          doctor: doctorId,
+          startDate,
+          endDate,
+          diagnosis,
+          description,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      await fetchMedicalHistory(doctorId, "doctor");
+      return response.data.data;
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error creating medical history");
+    }
+  };
+
+  const updateMedicalHistory = async (
+    medicalHistoryId: string,
+    diagnosis: string,
+    description: string,
+    startDate: string,
+    endDate: string,
+    patientId: string,
+    doctorId: string
+  ) => {
+    try {
+      const response = await axiosInstance.patch(
+        `/history/${medicalHistoryId}`,
+        { diagnosis, description, patient: patientId, startDate, endDate },
+        {
+          withCredentials: true,
+        }
+      );
+      await fetchMedicalHistory(doctorId, "doctor");
+      return response.data.data;
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error updating medical history");
+    }
+  };
+
+  const deleteMedicalHistory = async (
+    medicalHistoryId: string,
+    doctorId: string
+  ) => {
+    try {
+      const response = await axiosInstance.delete(
+        `/history/${medicalHistoryId}`,
+        {
+          withCredentials: true,
+        }
+      );
+      await fetchMedicalHistory(doctorId, "doctor");
+      response.data.data;
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error deleting medical history");
+    }
+  };
+
   return (
     <MedicalHistoryContext.Provider
       value={{
@@ -127,6 +254,11 @@ export const MedicalHistoryProvider = ({
         fetchMedicalHistory,
         setMedicalHistory,
         fetchMedicalHistoryById,
+        getAllPatients,
+        getMedicalHistoryPDF,
+        createMedicalHistory,
+        updateMedicalHistory,
+        deleteMedicalHistory,
       }}
     >
       {children}

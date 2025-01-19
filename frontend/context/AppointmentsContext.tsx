@@ -43,6 +43,8 @@ interface Appointment {
     appointment: string;
     dateOfUpload: string;
     description: string;
+    createdAt: string;
+    updatedAt: string;
     status: string;
   };
 }
@@ -75,6 +77,7 @@ interface AppointmentsContextType {
     endTime,
     description,
   }) => Promise<void>;
+  getDoctorAndPatientAppointments: (doctorId: string) => Promise<Appointment[]>;
 }
 
 const AppointmentsContext = createContext<AppointmentsContextType | undefined>(
@@ -225,6 +228,21 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const getDoctorAndPatientAppointments = async (doctorId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.get(`/appointments/${doctorId}`, {
+        withCredentials: true,
+      });
+      return response.data.data;
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error fetching appointments");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchAppointments();
@@ -245,6 +263,7 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
         acceptAppointment,
         rejectAppointment,
         updateDoctorAppointment,
+        getDoctorAndPatientAppointments,
       }}
     >
       {children}
