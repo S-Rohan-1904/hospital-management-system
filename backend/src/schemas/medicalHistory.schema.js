@@ -61,8 +61,8 @@ const updateMedicalHistorySchema = z.object({
     .refine((value) => !value || value.trim().length > 0, {
       message: "hospital cannot be empty after trimming whitespace",
     }),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
   scanDocuments: z.array(z.string()).optional(),
   diagnosis: z
     .string()
