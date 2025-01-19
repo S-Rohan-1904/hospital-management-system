@@ -14,12 +14,6 @@ const createMedicalHistorySchema = z
       .refine((value) => value.trim().length > 0, {
         message: "doctor cannot be empty after trimming whitespace",
       }),
-    hospital: z
-      .string()
-      .min(1, "description cannot be empty")
-      .refine((value) => value.trim().length > 0, {
-        message: "hospital cannot be empty after trimming whitespace",
-      }),
     startDate: z.string().datetime(),
     endDate: z.string().datetime(),
     diagnosis: z
