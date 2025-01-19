@@ -4,6 +4,11 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { jsPDF } from "jspdf";
 import mongoose from "mongoose";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { User } from "../models/user.model.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
 
 const getScanDocumentsByMedicalHistory = async (
   patientId,
@@ -99,6 +104,214 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
     return res
       .status(500)
       .json(new ApiResponse(500, {}, "Failed to create medical history"));
+  }
+
+  const roles = ["doctor","patient"];
+
+  let uploadedPDFUrl;
+
+  for (const role of roles) {
+    const formatDate = (date) => {
+      const day = new Date(date).getDate();
+      const month = new Date(date).toLocaleString("default", { month: "short" });
+      const year = new Date(date).getFullYear();
+      return `${day} ${month} ${year}`;
+    };
+
+    try {
+      const medicalHistories = await MedicalHistory.aggregate([
+        {
+          $match:
+            role === "doctor"
+              ? { doctor: new mongoose.Types.ObjectId(req.user._id) }
+              : { patient: new mongoose.Types.ObjectId(patient) },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "patient",
+            foreignField: "_id",
+            as: "patientDetails",
+          },
+        },
+        { $unwind: "$patientDetails" },
+        {
+          $lookup: {
+            from: "users",
+            localField: "doctor",
+            foreignField: "_id",
+            as: "doctorDetails",
+          },
+        },
+        { $unwind: "$doctorDetails" },
+        {
+          $lookup: {
+            from: "hospitals",
+            localField: "hospital",
+            foreignField: "_id",
+            as: "hospitalDetails",
+          },
+        },
+        { $unwind: "$hospitalDetails" },
+        {
+          $project: {
+            _id: 1,
+            diagnosis: 1,
+            description: 1,
+            startDate: 1,
+            endDate: 1,
+            scanDocuments: 1,
+            "patientDetails.fullName": 1,
+            "doctorDetails.fullName": 1,
+            "hospitalDetails.name": 1,
+          },
+        },
+      ]);
+
+      // Create a styled PDF document
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4",
+      });
+      let yOffset = 50;
+
+      medicalHistories.forEach((history, index) => {
+        if (index > 0) {
+          pdf.addPage(); // Start each new medical history on a fresh page
+          yOffset = 30; // Reset yOffset for the new page
+        }
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 40; // Left margin
+        const lineSpacing = 15; // Line spacing
+        const contentWidth = pageWidth - 2 * margin;
+
+        const addPageIfNeeded = (yOffset, additionalHeight) => {
+          if (yOffset + additionalHeight > pageHeight - 30) {
+            pdf.addPage();
+            return 30; // Reset yOffset for the new page
+          }
+          return yOffset;
+        };
+
+        const wrapAndRenderText = (text, x, y) => {
+          const wrappedText = pdf.splitTextToSize(text, contentWidth);
+          wrappedText.forEach((line) => {
+            y = addPageIfNeeded(y, lineSpacing);
+            pdf.text(line, x, y);
+            y += lineSpacing;
+          });
+          return y;
+        };
+
+        pdf.setFont("Helvetica", "bold");
+        pdf.setFontSize(16);
+        const title = "Medical History";
+        const textWidth = pdf.getTextWidth(title);
+        const centerX = (pageWidth - textWidth) / 2;
+        pdf.text(title, centerX, yOffset); // Centered title
+        yOffset += 40;
+
+        pdf.setFont("Helvetica", "normal");
+        pdf.setFontSize(12);
+
+        pdf.text(
+          `Patient Name: ${history.patientDetails.fullName}`,
+          margin,
+          yOffset
+        );
+        yOffset += 20;
+        pdf.text(
+          `Doctor Name: ${history.doctorDetails.fullName}`,
+          margin,
+          yOffset
+        );
+        yOffset += 20;
+        pdf.text(
+          `Hospital Name: ${history.hospitalDetails.name}`,
+          margin,
+          yOffset
+        );
+        yOffset += 20;
+
+        // Use formatDateWithSuffix to display the date with suffix
+        pdf.text(`Start Date: ${formatDate(history.startDate)}`, margin, yOffset);
+        yOffset += 20;
+        pdf.text(`End Date: ${formatDate(history.endDate)}`, margin, yOffset);
+        yOffset += 20;
+
+        // Diagnosis Section
+        pdf.setFont("Helvetica", "bold");
+        pdf.text(`Diagnosis:`, margin, yOffset);
+        yOffset += 20;
+
+        pdf.setFont("Helvetica", "normal");
+        yOffset = wrapAndRenderText(history.diagnosis, margin + 20, yOffset);
+        yOffset += 20; // Add spacing after diagnosis
+
+        // Description Section
+        pdf.setFont("Helvetica", "bold");
+        pdf.text(`Description:`, margin, yOffset);
+        yOffset += 20;
+
+        pdf.setFont("Helvetica", "normal");
+        yOffset = wrapAndRenderText(history.description, margin + 20, yOffset);
+        yOffset += 20; // Add spacing after description
+
+        // Scan Documents Section
+        if (history.scanDocuments.length > 0) {
+          pdf.setFont("Helvetica", "bold");
+          pdf.text(`Scan Documents:`, margin, yOffset);
+          yOffset += 20;
+
+          pdf.setFont("Helvetica", "normal");
+          history.scanDocuments.forEach((doc) => {
+            yOffset = addPageIfNeeded(yOffset, lineSpacing);
+            pdf.setTextColor(0, 0, 255);
+            pdf.textWithLink(doc, margin + 20, yOffset, { url: doc });
+            pdf.setTextColor(0, 0, 0);
+            yOffset += lineSpacing;
+          });
+        }
+      });
+
+      const pdfBuffer = pdf.output("arraybuffer");
+
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+
+      const fileName = `medical-history-${MedicalHistory._id}.pdf`;
+      console.log("dirname",__dirname)
+      const filePath = path.join(__dirname, "uploads", fileName);
+
+      // Ensure the uploads directory exists
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+
+      fs.writeFileSync(filePath, Buffer.from(pdfBuffer));
+
+      uploadedPDFUrl = await uploadToCloudinary(filePath);
+
+    } catch (error) {
+      return res
+        .status(500)
+        .json(
+          new ApiResponse(
+            500,
+            {},
+            error.message || "Something went wrong while generating the PDF"
+          )
+        );
+    }
+  }
+
+  for (const role in roles){
+    if (role==="doctor") {
+      await User.findByIdAndUpdate(req.user._id,{medicalHistoryUrl:uploadedPDFUrl.url})
+    } else {
+      await User.findByIdAndUpdate(patient,{medicalHistoryUrl:uploadedPDFUrl.url})
+    }
   }
 
   return res
@@ -289,193 +502,24 @@ const deleteMedicalHistory = asyncHandler(async (req, res) => {
 });
 
 const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
-  const { _id, role } = req.body;
-  const { role: userRole } = req.user;
-
-  if (!["doctor", "patient"].includes(userRole)) {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
-  }
-
-  // Utility function to format date to "29th Jan 2025"
-  const formatDate = (date) => {
-    const day = new Date(date).getDate();
-    const month = new Date(date).toLocaleString("default", { month: "short" });
-    const year = new Date(date).getFullYear();
-    return `${day} ${month} ${year}`;
-  };
+  const { email } = req.body;
 
   try {
-    const medicalHistories = await MedicalHistory.aggregate([
-      {
-        $match:
-          role === "doctor"
-            ? { doctor: new mongoose.Types.ObjectId(_id) }
-            : { patient: new mongoose.Types.ObjectId(_id) },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "patient",
-          foreignField: "_id",
-          as: "patientDetails",
-        },
-      },
-      { $unwind: "$patientDetails" },
-      {
-        $lookup: {
-          from: "users",
-          localField: "doctor",
-          foreignField: "_id",
-          as: "doctorDetails",
-        },
-      },
-      { $unwind: "$doctorDetails" },
-      {
-        $lookup: {
-          from: "hospitals",
-          localField: "hospital",
-          foreignField: "_id",
-          as: "hospitalDetails",
-        },
-      },
-      { $unwind: "$hospitalDetails" },
-      {
-        $project: {
-          _id: 1,
-          diagnosis: 1,
-          description: 1,
-          startDate: 1,
-          endDate: 1,
-          scanDocuments: 1,
-          "patientDetails.fullName": 1,
-          "doctorDetails.fullName": 1,
-          "hospitalDetails.name": 1,
-        },
-      },
-    ]);
+      const user = await User.findOne({email});
 
-    if (medicalHistories.length === 0) {
+      if (!user) {
+        return res
+          .status(404)
+          .json(new ApiResponse(404, {}, "User not found"))
+      }
+
+      const data = {
+        "medicalHistoryUrl": user.medicalHistoryUrl
+      }
+    
       return res
-        .status(404)
-        .json(new ApiResponse(404, {}, "No medical history found"));
-    }
-
-    // Create a styled PDF document
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "pt",
-      format: "a4",
-    });
-    let yOffset = 50;
-
-    medicalHistories.forEach((history, index) => {
-      if (index > 0) {
-        pdf.addPage(); // Start each new medical history on a fresh page
-        yOffset = 30; // Reset yOffset for the new page
-      }
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 40; // Left margin
-      const lineSpacing = 15; // Line spacing
-      const contentWidth = pageWidth - 2 * margin;
-
-      const addPageIfNeeded = (yOffset, additionalHeight) => {
-        if (yOffset + additionalHeight > pageHeight - 30) {
-          pdf.addPage();
-          return 30; // Reset yOffset for the new page
-        }
-        return yOffset;
-      };
-
-      const wrapAndRenderText = (text, x, y) => {
-        const wrappedText = pdf.splitTextToSize(text, contentWidth);
-        wrappedText.forEach((line) => {
-          y = addPageIfNeeded(y, lineSpacing);
-          pdf.text(line, x, y);
-          y += lineSpacing;
-        });
-        return y;
-      };
-
-      pdf.setFont("Helvetica", "bold");
-      pdf.setFontSize(16);
-      const title = "Medical History";
-      const textWidth = pdf.getTextWidth(title);
-      const centerX = (pageWidth - textWidth) / 2;
-      pdf.text(title, centerX, yOffset); // Centered title
-      yOffset += 40;
-
-      pdf.setFont("Helvetica", "normal");
-      pdf.setFontSize(12);
-
-      pdf.text(
-        `Patient Name: ${history.patientDetails.fullName}`,
-        margin,
-        yOffset
-      );
-      yOffset += 20;
-      pdf.text(
-        `Doctor Name: ${history.doctorDetails.fullName}`,
-        margin,
-        yOffset
-      );
-      yOffset += 20;
-      pdf.text(
-        `Hospital Name: ${history.hospitalDetails.name}`,
-        margin,
-        yOffset
-      );
-      yOffset += 20;
-
-      // Use formatDateWithSuffix to display the date with suffix
-      pdf.text(`Start Date: ${formatDate(history.startDate)}`, margin, yOffset);
-      yOffset += 20;
-      pdf.text(`End Date: ${formatDate(history.endDate)}`, margin, yOffset);
-      yOffset += 20;
-
-      // Diagnosis Section
-      pdf.setFont("Helvetica", "bold");
-      pdf.text(`Diagnosis:`, margin, yOffset);
-      yOffset += 20;
-
-      pdf.setFont("Helvetica", "normal");
-      yOffset = wrapAndRenderText(history.diagnosis, margin + 20, yOffset);
-      yOffset += 20; // Add spacing after diagnosis
-
-      // Description Section
-      pdf.setFont("Helvetica", "bold");
-      pdf.text(`Description:`, margin, yOffset);
-      yOffset += 20;
-
-      pdf.setFont("Helvetica", "normal");
-      yOffset = wrapAndRenderText(history.description, margin + 20, yOffset);
-      yOffset += 20; // Add spacing after description
-
-      // Scan Documents Section
-      if (history.scanDocuments.length > 0) {
-        pdf.setFont("Helvetica", "bold");
-        pdf.text(`Scan Documents:`, margin, yOffset);
-        yOffset += 20;
-
-        pdf.setFont("Helvetica", "normal");
-        history.scanDocuments.forEach((doc) => {
-          yOffset = addPageIfNeeded(yOffset, lineSpacing);
-          pdf.setTextColor(0, 0, 255);
-          pdf.textWithLink(doc, margin + 20, yOffset, { url: doc });
-          pdf.setTextColor(0, 0, 0);
-          yOffset += lineSpacing;
-        });
-      }
-    });
-
-    const pdfBuffer = pdf.output("arraybuffer");
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="medical_histories.pdf"`
-    );
-    res.send(Buffer.from(pdfBuffer));
+        .status(200)
+        .json(new ApiResponse(200, data, "Medical History has been successfully fetched"))
   } catch (error) {
     return res
       .status(500)
@@ -483,7 +527,7 @@ const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           {},
-          error.message || "Something went wrong while generating the PDF"
+          error.message || "Error fetching medical History url"
         )
       );
   }
