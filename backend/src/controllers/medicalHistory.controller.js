@@ -20,7 +20,6 @@ const getScanDocumentsByMedicalHistory = async (
   startDate,
   endDate
 ) => {
-  try {
     const start = new Date(startDate);
     const end = new Date(endDate);
     end.setUTCHours(23, 59, 59);
@@ -36,17 +35,6 @@ const getScanDocumentsByMedicalHistory = async (
     const scanDocuments = scanRequests.map((request) => request.scanDocument);
 
     return scanDocuments;
-  } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          {},
-          error.message || "Error fetching scan documents"
-        )
-      );
-  }
 };
 
 const createMedicalHistory = asyncHandler(async (req, res) => {
@@ -79,46 +67,57 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
 
   const hospitalObject = await Hospital.findOne({ doctors: doctor })
 
-  const scanDocuments = await getScanDocumentsByMedicalHistory(
-    patient,
-    doctor,
-    hospitalObject._id,
-    startDate,
-    endDate
-  );
-
-  if (!scanDocuments) {
+  let scanDocuments, medicalHistory;
+  try {
+    scanDocuments = await getScanDocumentsByMedicalHistory(
+      patient,
+      doctor,
+      hospitalObject._id,
+      startDate,
+      endDate
+    );
+  
+    if (scanDocuments.length === 0) {
+      return res
+        .status(409)
+        .json(new ApiResponse(409, {}, "No medical history found"));
+    }
+  } catch (error) {
     return res
       .status(500)
-      .json(new ApiResponse(500, {}, "Error fetching scan documents"));
+      .json(new ApiResponse(500, {}, error.message || "Failed to fetch medical history"))
   }
 
-  const checkMedicalHistoryExists = await MedicalHistory.findOne({
-    startDate,
-    endDate
-  })
-
-  if (checkMedicalHistoryExists) {
+  try {
+    const checkMedicalHistoryExists = await MedicalHistory.findOne({
+      startDate,
+      endDate
+    })
+  
+    if (checkMedicalHistoryExists) {
+      return res
+        .status(409)
+        .json(new ApiResponse(409, {}, "Medical History already exists"))
+    }
+  
+    medicalHistory = await MedicalHistory.create({
+      patient,
+      doctor,
+      hospital: hospitalObject._id,
+      startDate,
+      endDate,
+      scanDocuments,
+      diagnosis,
+      description,
+    });
+  
+    if (!medicalHistory) {
+      
+    }
+  } catch (error) {
     return res
-      .status(409)
-      .json(new ApiResponse(409, {}, "Medical History already exists"))
-  }
-
-  const medicalHistory = await MedicalHistory.create({
-    patient,
-    doctor,
-    hospital: hospitalObject._id,
-    startDate,
-    endDate,
-    scanDocuments,
-    diagnosis,
-    description,
-  });
-
-  if (!medicalHistory) {
-    return res
-      .status(500)
-      .json(new ApiResponse(500, {}, "Failed to create medical history"));
+        .status(500)
+        .json(new ApiResponse(500, {}, "Failed to create medical history"));
   }
 
   let uploadedPDF;
@@ -318,22 +317,28 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
     }
   }
 
-  for (const role in ["doctor","patient"]){
-    if (role==="doctor") {
-      const doctor = await User.findById(req.user._id);
-      if (doctor.medicalHistoryUrl!==""){
-        await deleteFromCloudinary(doctor.medicalHistoryUrl);
+  try {
+    for (const role in ["doctor","patient"]){
+      if (role==="doctor") {
+        const doctor = await User.findById(req.user._id);
+        if (doctor.medicalHistoryUrl!==""){
+          await deleteFromCloudinary(doctor.medicalHistoryUrl);
+        }
+        doctor.medicalHistoryUrl = uploadedPDF.url
+        await doctor.save({validateBeforeSave: false})
+      } else {
+        const patientObject = await User.findById(patient);
+        if (patientObject.medicalHistoryUrl!==""){
+          await deleteFromCloudinary(patientObject.medicalHistoryUrl);
+        }
+        patientObject.medicalHistoryUrl = uploadedPDF.url
+        await patientObject.save({validateBeforeSave: false})
       }
-      doctor.medicalHistoryUrl = uploadedPDF.url
-      await doctor.save({validateBeforeSave: false})
-    } else {
-      const patientObject = await User.findById(patient);
-      if (patientObject.medicalHistoryUrl!==""){
-        await deleteFromCloudinary(patientObject.medicalHistoryUrl);
-      }
-      patientObject.medicalHistoryUrl = uploadedPDF.url
-      await patientObject.save({validateBeforeSave: false})
     }
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, error.message || "Failed to update Medical history Url"))
   }
 
   return res
