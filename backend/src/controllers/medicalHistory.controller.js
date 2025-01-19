@@ -1,14 +1,17 @@
-import { MedicalHistory } from "../models/medicalHistory.model.js";
-import { ScanRequest } from "../models/scanRequest.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
+
 import { jsPDF } from "jspdf";
 import mongoose from "mongoose";
-import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
-import { User } from "../models/user.model.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+
+import { MedicalHistory } from "../models/medicalHistory.model.js";
+import { ScanRequest } from "../models/scanRequest.model.js";
+import { User } from "../models/user.model.js";
+import { Hospital } from "../models/hospital.model.js";
 
 const getScanDocumentsByMedicalHistory = async (
   patientId,
@@ -50,7 +53,6 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
   const {
     patient,
     doctor,
-    hospital,
     startDate,
     endDate,
     diagnosis,
@@ -75,10 +77,12 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
     return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
+  const hospitalObject = await Hospital.findOne({ doctors: doctor })
+
   const scanDocuments = await getScanDocumentsByMedicalHistory(
     patient,
     doctor,
-    hospital,
+    hospitalObject._id,
     startDate,
     endDate
   );
@@ -92,7 +96,7 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
   const medicalHistory = await MedicalHistory.create({
     patient,
     doctor,
-    hospital,
+    hospital: hospitalObject._id,
     startDate,
     endDate,
     scanDocuments,
@@ -106,11 +110,9 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
       .json(new ApiResponse(500, {}, "Failed to create medical history"));
   }
 
-  const roles = ["doctor","patient"];
-
   let uploadedPDFUrl;
 
-  for (const role of roles) {
+  for (const role of ["doctor","patient"]) {
     const formatDate = (date) => {
       const day = new Date(date).getDate();
       const month = new Date(date).toLocaleString("default", { month: "short" });
@@ -283,7 +285,6 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
       const __dirname = path.dirname(__filename);
 
       const fileName = `medical-history-${MedicalHistory._id}.pdf`;
-      console.log("dirname",__dirname)
       const filePath = path.join(__dirname, "uploads", fileName);
 
       // Ensure the uploads directory exists
@@ -306,7 +307,7 @@ const createMedicalHistory = asyncHandler(async (req, res) => {
     }
   }
 
-  for (const role in roles){
+  for (const role in ["doctor","patient"]){
     if (role==="doctor") {
       await User.findByIdAndUpdate(req.user._id,{medicalHistoryUrl:uploadedPDFUrl.url})
     } else {
