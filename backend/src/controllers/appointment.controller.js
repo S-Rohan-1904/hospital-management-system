@@ -1,4 +1,3 @@
-import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { Appointment } from "../models/appointment.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
@@ -322,6 +321,12 @@ const updateAppointment = asyncHandler(async (req, res) => {
   if (role === "doctor") {
     const appointment = await Appointment.findById(appointmentId);
 
+    if (!appointment) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Appointment not found"));
+    }
+
     const updateFields = {};
 
     for (const [key, value] of Object.entries(req.body)) {
@@ -567,6 +572,31 @@ const getDoctorAppointments = asyncHandler(async (req, res) => {
   }
 });
 
+const getDoctorAndPatientAppoinments = asyncHandler(async (req, res) => { 
+  const { doctorId } = req.params;
+  const { patientId } = req.body;
+
+  try {
+    const appointments = await Appointment.find({ 
+      patient: patientId,
+      doctor: doctorId,
+      $or: [
+        { status: "scheduled" },
+        { status: "rescheduled" },
+      ]
+    })
+  
+    return res
+      .status(200)
+      .json(new ApiResponse(200, appointments, "Appointments fetched successfully" ))
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, error.message || "Failed to fetch appointments"));
+  }
+
+})
+
 export {
   requestAppointment,
   approveOrRejectAppointment,
@@ -575,4 +605,5 @@ export {
   updateAppointment,
   deleteAppointment,
   getDoctorAppointments,
+  getDoctorAndPatientAppoinments,
 };
