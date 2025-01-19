@@ -574,11 +574,9 @@ const getDoctorAppointments = asyncHandler(async (req, res) => {
 
 const getDoctorAndPatientAppoinments = asyncHandler(async (req, res) => { 
   const { doctorId } = req.params;
-  const { patientId } = req.body;
 
   try {
     const appointments = await Appointment.find({ 
-      patient: patientId,
       doctor: doctorId,
       $or: [
         { status: "scheduled" },

@@ -37,6 +37,6 @@ router
 router.route("/:id/:status").patch(verifyJWT, approveOrRejectAppointment);
 router.route("/:id").delete(verifyJWT, deleteAppointment);
 router.route("/doctor").post(verifyJWT, getDoctorAppointments);
-router.route("/:doctorId").post(verifyJWT, getDoctorAndPatientAppoinments);
+router.route("/:doctorId").get(verifyJWT, getDoctorAndPatientAppoinments);
 
 export default router;
