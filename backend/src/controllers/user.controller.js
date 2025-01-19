@@ -363,10 +363,10 @@ const checkAuthenicated = asyncHandler(async (req, res) => {
     return res.json({ authenticated: true });
   } catch (error) {
     return res
-      .status(500)
+      .status(401)
       .json(
         new ApiResponse(
-          500,
+          401,
           {},
           error?.message || "Something went wrong while checking authentication"
         )
