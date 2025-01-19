@@ -163,9 +163,9 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
           withCredentials: true,
         }
       );
-      await fetchAppointments(); // Refresh appointments after deletion
+      await fetchAppointments();
     } catch (err: any) {
-      setError(err.response?.data?.message || "Error deleting appointment");
+      setError(err.response?.data?.message || "Error requesting appointment");
     } finally {
       setLoading(false);
     }
