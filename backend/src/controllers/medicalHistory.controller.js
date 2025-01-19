@@ -4,7 +4,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { jsPDF } from "jspdf";
 import mongoose from "mongoose";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.model.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -505,21 +505,17 @@ const getMedicalHistoryAsPDF = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
   try {
-      const user = await User.findOne({email});
+      const user = await User.findOne({email}).select("medicalHistoryUrl");
 
       if (!user) {
         return res
           .status(404)
           .json(new ApiResponse(404, {}, "User not found"))
       }
-
-      const data = {
-        "medicalHistoryUrl": user.medicalHistoryUrl
-      }
     
       return res
         .status(200)
-        .json(new ApiResponse(200, data, "Medical History has been successfully fetched"))
+        .json(new ApiResponse(200, user, "Medical History PDF has been successfully fetched"))
   } catch (error) {
     return res
       .status(500)
