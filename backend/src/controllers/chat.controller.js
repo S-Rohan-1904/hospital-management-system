@@ -3,6 +3,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Hospital } from "../models/hospital.model.js";
 import { ChatGroup } from "../models/chatGroup.model.js";
+import { uploadToCloudinary } from "../utils/cloudinary.js"
 
 const getUserChats = asyncHandler(async (req, res) => {
   const userId = req.user._id;
@@ -25,8 +26,6 @@ const getUserChats = asyncHandler(async (req, res) => {
           _id: { $ne: userId },
           chatGroups: chatGroup._id,
         });
-        console.log(chatGroup);
-        console.log(recipient);
 
         chatGroup.groupName = recipient.fullName;
         chatGroup.avatar = recipient.avatar;
@@ -50,7 +49,7 @@ const getUserChats = asyncHandler(async (req, res) => {
 
 const createChat = asyncHandler(async (req, res) => {
   const { role } = req.user;
-  const { userId, specialization, groupName, avatar } = req.body;
+  const { userId, specialization, groupName} = req.body;
 
   if (!userId && !specialization) {
     return res
@@ -90,9 +89,25 @@ const createChat = asyncHandler(async (req, res) => {
           );
       }
 
+      const avatarLocalFilePath = req.file?.path;
+
+      if (!avatarLocalFilePath) {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, {}, "Avatar file is required"));
+      }
+
+      const avatar = await uploadToCloudinary(avatarLocalFilePath);
+
+      if (!avatar) {
+        return res
+          .status(500)
+          .json(new ApiResponse(500, {}, "Failed to upload avatar"));
+      }
+      
       const groupChat = await ChatGroup.create({
         groupName,
-        avatar,
+        avatar: avatar.url,
         groupchat: true,
       });
 
