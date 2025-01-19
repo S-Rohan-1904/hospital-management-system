@@ -375,6 +375,12 @@ const checkAuthenicated = asyncHandler(async (req, res) => {
 });
 
 const getAllPatients = asyncHandler(async (req, res) => {
+  const { role } = req.user;
+
+  if (role!=="doctor") {
+    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
+  }
+
   try {
     const patients = await User.find({role:"patient"}).select("email fullName");
     
