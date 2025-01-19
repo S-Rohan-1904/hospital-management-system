@@ -9,15 +9,18 @@ import { useEffect } from "react";
 
 export default function PatientMedicalHistory() {
   const { medicalHistory, fetchMedicalHistory } = useMedicalHistoryContext();
-  const { currentUser } = useAuthContext();
+  const { currentUser, fetchAuthStatus } = useAuthContext();
   useEffect(() => {
     console.log(medicalHistory);
   });
 
   useEffect(() => {
-    if (currentUser) {
-      fetchMedicalHistory(currentUser._id, currentUser.role);
-    }
+    (async () => {
+      const res = await fetchAuthStatus();
+      console.log(res);
+
+      await fetchMedicalHistory(res._id, res.role);
+    })();
   }, []);
   return (
     <div className="grid gap-6">
@@ -36,6 +39,8 @@ export default function PatientMedicalHistory() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 ">
+                <h3> Hospital: {record.hospital.name}</h3>
+                <h3>Doctor: {record.doctor.fullName}</h3>
                 <div className="flex items-center gap-2 flex-row">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Calendar className="mr-2 h-4 w-4" />

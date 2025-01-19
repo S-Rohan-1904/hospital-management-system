@@ -67,7 +67,7 @@ interface AuthContextType {
   currentUser: AuthResponse | null;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  fetchAuthStatus: () => Promise<void>;
+  fetchAuthStatus: () => Promise<AuthResponse>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -94,6 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
 
         setCurrentUser(userResponse.data.data);
+        return userResponse.data.data;
       } else {
         setCurrentUser(null);
       }
