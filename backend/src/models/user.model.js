@@ -4,14 +4,6 @@ import jwt from "jsonwebtoken";
 
 const userSchema = Schema(
   {
-    username: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      index: true,
-    },
     email: {
       type: String,
       required: true,
@@ -39,12 +31,12 @@ const userSchema = Schema(
     },
     role: {
       type: String,
-      enum: ["doctor", "patient", "scanCentre", "hospital", "nurse"],
+      enum: ["doctor", "patient", "scanCentre"],
       required: true,
     },
     googleId: {
       type: String,
-      allowNull: true,
+      required: false,
     },
     gender: {
       type: String,
@@ -62,6 +54,12 @@ const userSchema = Schema(
         message: "Specialization is required for doctors",
       },
     },
+    chatGroups: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "ChatGroup",
+      },
+    ],
   },
   {
     timestamps: true,
@@ -82,7 +80,6 @@ userSchema.methods.generateAccessToken = async function () {
   return jwt.sign(
     {
       _id: this._id,
-      username: this.username,
       email: this.email,
       fullName: this.fullName,
     },

@@ -28,7 +28,8 @@ const requestAppointment = asyncHandler(async (req, res) => {
       .json(new ApiResponse(401, {}, "Unauthorized request"));
   }
 
-  const { doctorId, startTime, endTime, hospitalId, onlineAppointment } = req.body;
+  const { doctorId, startTime, endTime, hospitalId, onlineAppointment } =
+    req.body;
 
   // if (
   //   [doctorId, startTime, endTime, hospitalId].some(
@@ -330,9 +331,13 @@ const updateAppointment = asyncHandler(async (req, res) => {
     }
 
     if ("startTime" in updateFields && "endTime" in updateFields) {
-      const updatedStartTimeUTC = new Date(updateFields.startTime).toISOString();
+      const updatedStartTimeUTC = new Date(
+        updateFields.startTime
+      ).toISOString();
       const updatedEndTimeUTC = new Date(updateFields.endTime).toISOString();
-      const appointmentStartTimeUTC = new Date(appointment.startTime).toISOString();
+      const appointmentStartTimeUTC = new Date(
+        appointment.startTime
+      ).toISOString();
       const appointmentEndTimeUTC = new Date(appointment.endTime).toISOString();
 
       if (

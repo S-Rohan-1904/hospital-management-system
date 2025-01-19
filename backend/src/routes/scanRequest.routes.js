@@ -11,12 +11,17 @@ import {
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { validate } from "../middlewares/validator.middleware.js";
-import { createScanRequestSchema, updateScanRequestSchema } from "../schemas/scanRequest.schema.js";
+import {
+  createScanRequestSchema,
+  updateScanRequestSchema,
+} from "../schemas/scanRequest.schema.js";
 
 const router = Router();
 
 router.route("/").get(verifyJWT, getScanRequests);
-router.route("/").post(verifyJWT, validate(createScanRequestSchema), createScanRequest);
+router
+  .route("/")
+  .post(verifyJWT, validate(createScanRequestSchema), createScanRequest);
 router
   .route("/:id/complete")
   .post(verifyJWT, upload.single("scanDocument"), completeScanRequest);
@@ -28,6 +33,6 @@ router
 router
   .route("/:id")
   .patch(verifyJWT, upload.single("scanDocument"), updateScanRequest);
-router.route("/centres").get(verifyJWT, getAllScancentres)
+router.route("/centres").get(verifyJWT, getAllScancentres);
 
 export default router;

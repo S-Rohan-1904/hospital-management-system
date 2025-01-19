@@ -1,6 +1,9 @@
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import { uploadToCloudinary,deleteFromCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 import { ScanRequest } from "../models/scanRequest.model.js";
 import { Appointment } from "../models/appointment.model.js";
 import { User } from "../models/user.model.js";
@@ -21,17 +24,19 @@ const createScanRequest = asyncHandler(async (req, res) => {
   //     .json(new ApiResponse(400, {}, "All fields are required"));
   // }
 
-  const checkScanRequestExists = await ScanRequest.findOne({appointment: appointment});
+  const checkScanRequestExists = await ScanRequest.findOne({
+    appointment: appointment,
+  });
 
   if (!checkScanRequestExists) {
     const appointmentObject = await Appointment.findById(appointment);
-  
+
     if (!appointmentObject) {
       return res
         .status(404)
         .json(new ApiResponse(404, {}, "Invalid Appointment"));
     }
-  
+
     const scanRequest = await ScanRequest.create({
       patient: appointmentObject.patient,
       doctor: req.user._id,
@@ -40,21 +45,27 @@ const createScanRequest = asyncHandler(async (req, res) => {
       description,
       appointment: appointmentObject._id,
     });
-  
+
     if (!scanRequest) {
       return res
         .status(500)
         .json(new ApiResponse(500, {}, "Failed to create scan request"));
     }
-  
+
     return res
       .status(201)
       .json(new ApiResponse(201, scanRequest, "Scan request created"));
-} else {
-  return res
-    .status(409)
-    .json(new ApiResponse(409, {}, "Scan Request for this appointment already exists."));
-}
+  } else {
+    return res
+      .status(409)
+      .json(
+        new ApiResponse(
+          409,
+          {},
+          "Scan Request for this appointment already exists."
+        )
+      );
+  }
 });
 
 const deleteScanRequest = asyncHandler(async (req, res) => {
@@ -78,22 +89,23 @@ const deleteScanRequest = asyncHandler(async (req, res) => {
       .json(new ApiResponse(404, {}, "Scan request not found"));
   }
 
-  if (["pending","rejected"].includes(scanRequest.status)) {
+  if (["pending", "rejected"].includes(scanRequest.status)) {
     if (!scanRequest.doctor.equals(req.user._id)) {
-      return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
+      return res
+        .status(403)
+        .json(new ApiResponse(403, {}, "Forbidden request"));
     }
-  
+
     await ScanRequest.deleteOne({ _id: scanRequest._id });
-  
+
     return res
       .status(200)
       .json(new ApiResponse(200, scanRequest, "Scan request deleted"));
-  }
- else {
+  } else {
     return res
       .status(409)
       .json(new ApiResponse(409, {}, "Scan request cannot be deleted"));
- }
+  }
 });
 
 const approveOrRejectScanRequest = asyncHandler(async (req, res) => {
@@ -214,17 +226,14 @@ const getScanRequestsByRole = async (userId, role) => {
 
     {
       $project: {
-          "patient.password": 0, // Exclude password from patient
-          "doctor.password": 0, // Exclude password from doctor
-          "scanCentre.password": 0, // Exclude password from scanCentre
-          "hospital.doctors": 0, // Exclude password from hospital
-          "appointment.details": 0, // Exclude appointment details
-          "patient.refreshToken": 0,
-          "doctor.refreshToken": 0,
-          "scanCentre.refreshToken": 0,
-          "patient.username": 0,
-          "doctor.username": 0,
-          "scanCentre.username": 0,
+        "patient.password": 0, // Exclude password from patient
+        "doctor.password": 0, // Exclude password from doctor
+        "scanCentre.password": 0, // Exclude password from scanCentre
+        "hospital.doctors": 0, // Exclude password from hospital
+        "appointment.details": 0, // Exclude appointment details
+        "patient.refreshToken": 0,
+        "doctor.refreshToken": 0,
+        "scanCentre.refreshToken": 0,
       },
     },
     // Optional: Add computed fields if needed
@@ -298,13 +307,12 @@ const completeScanRequest = asyncHandler(async (req, res) => {
   }
 
   if (scanDocumentLocalPath) {
-
-    const fileExtension = scanDocumentLocalPath.split('.').pop().toLowerCase();
-    if (fileExtension !== 'pdf') {
+    const fileExtension = scanDocumentLocalPath.split(".").pop().toLowerCase();
+    if (fileExtension !== "pdf") {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Only PDF files are allowed"));
-  }
+    }
     const scanDocument = await uploadToCloudinary(scanDocumentLocalPath);
 
     if (!scanDocument) {
@@ -313,7 +321,7 @@ const completeScanRequest = asyncHandler(async (req, res) => {
         .json(new ApiResponse(500, {}, "Error uploading scan document"));
     }
 
-    console.log(scanDocument.url)
+    console.log(scanDocument.url);
     scanRequest.scanDocument = scanDocument.url;
   }
 
@@ -344,16 +352,19 @@ const updateScanRequest = asyncHandler(async (req, res) => {
     const { description, scanCentre } = req.body;
 
     if (!description && !scanCentre) {
-      return res.status(400).json(new ApiResponse(400,{},"description or scanCentre is required"));
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "description or scanCentre is required")
+        );
     }
     if (description) {
-      scanRequest.description = description;      
+      scanRequest.description = description;
     }
 
     if (scanCentre) {
       scanRequest.scanCentre = scanCentre;
     }
-
   } else if (role === "scanCentre") {
     const updatedScanDocumentLocalPath = req.file?.path;
 
@@ -363,8 +374,11 @@ const updateScanRequest = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Scan document is required"));
     }
 
-    const fileExtension = updatedScanDocumentLocalPath.split('.').pop().toLowerCase();
-    if (fileExtension !== 'pdf') {
+    const fileExtension = updatedScanDocumentLocalPath
+      .split(".")
+      .pop()
+      .toLowerCase();
+    if (fileExtension !== "pdf") {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Only PDF files are allowed"));
@@ -382,7 +396,7 @@ const updateScanRequest = asyncHandler(async (req, res) => {
 
     const oldScanDocument = scanRequest.scanDocument;
 
-    console.log(updatedScanDocument)
+    console.log(updatedScanDocument);
 
     scanRequest.scanDocument = updatedScanDocument.url;
 
@@ -410,12 +424,16 @@ const updateScanRequest = asyncHandler(async (req, res) => {
 
 const getAllScancentres = asyncHandler(async (req, res) => {
   try {
-    const scanCentres = await User.find({role: "scanCentre"}).select("-username -password -refreshToken")
-  
+    const scanCentres = await User.find({ role: "scanCentre" }).select(
+      "-password -refreshToken"
+    );
+
     if (!scanCentres) {
-      return res.status(404).json(new ApiResponse(404, {}, "No ScanCentres found"));
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "No ScanCentres found"));
     }
-  
+
     return res
       .status(200)
       .json(
@@ -426,7 +444,9 @@ const getAllScancentres = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    return res.status(500).json(new ApiResponse(500, {}, "Unable to fetch ScanCentres."))
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "Unable to fetch ScanCentres."));
   }
 });
 

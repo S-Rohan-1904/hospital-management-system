@@ -1,5 +1,4 @@
 import ApiResponse from "../utils/ApiResponse.js";
-import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import {
   uploadToCloudinary,
@@ -7,44 +6,30 @@ import {
 } from "../utils/cloudinary.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
-const generateAccessAndRefreshToken = async (userId) => {
-  try {
-    const user = await User.findById(userId);
-    const refreshToken = await user.generateRefreshToken();
-    const accessToken = await user.generateAccessToken();
 
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-    return { refreshToken, accessToken };
-  } catch (error) {
-    throw new ApiError(
-      res,
-      500,
-      "Something went wrong while generating referesh and access token"
-    );
-  }
+const generateAccessAndRefreshToken = async (userId) => {
+  const user = await User.findById(userId);
+  const refreshToken = await user.generateRefreshToken();
+  const accessToken = await user.generateAccessToken();
+
+  user.refreshToken = refreshToken;
+  await user.save({ validateBeforeSave: false });
+  return { refreshToken, accessToken };
 };
+
 const registerUser = asyncHandler(async (req, res) => {
-  const {
-    username,
-    email,
-    password,
-    fullName,
-    role,
-    address,
-    gender,
-    specialization,
-  } = req.body;
+  const { email, password, fullName, role, address, gender, specialization } =
+    req.body;
 
   // if (
-  //   [username, email, password, fullName, role, address, gender].some(
+  //   [ email, password, fullName, role, address, gender].some(
   //     (field) => !field || field.trim() == ""
   //   )
   // ) {
   //   throw new ApiError(res, 400, "All fields are required");
   // }
 
-  const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+  const existingUser = await User.findOne({ email });
 
   if (existingUser) {
     return res
@@ -75,7 +60,6 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const userData = {
-    username: username.toLowerCase(),
     email: email.toLowerCase(),
     fullName: fullName.trim(),
     avatar: avatar.url,
