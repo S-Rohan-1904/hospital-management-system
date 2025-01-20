@@ -132,6 +132,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const options = {
       httpOnly: true,
       secure: true,
+      sameSite: 'None',
     };
     return res
       .status(200)
@@ -172,6 +173,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: 'None',
   };
 
   return res
@@ -210,6 +212,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const options = {
       httpOnly: true,
       secure: true,
+      sameSite: 'None',
     };
 
     const { refreshToken: newRefreshToken, accessToken } =
@@ -377,22 +380,36 @@ const checkAuthenicated = asyncHandler(async (req, res) => {
 const getAllPatients = asyncHandler(async (req, res) => {
   const { role } = req.user;
 
-  if (role!=="doctor") {
+  if (role !== "doctor") {
     return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
   try {
-    const patients = await User.find({role:"patient"}).select("email fullName");
-    
+    const patients = await User.find({ role: "patient" }).select(
+      "email fullName"
+    );
+
     return res
       .status(200)
-      .json(new ApiResponse(200, patients, "Patients have been successfully fetched"))
+      .json(
+        new ApiResponse(
+          200,
+          patients,
+          "Patients have been successfully fetched"
+        )
+      );
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiResponse(500, {}, error.message || "Patients could not be fetched"))
+      .json(
+        new ApiResponse(
+          500,
+          {},
+          error.message || "Patients could not be fetched"
+        )
+      );
   }
-})
+});
 
 export {
   registerUser,
