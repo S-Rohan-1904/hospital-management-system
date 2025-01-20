@@ -96,7 +96,7 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       if (isAuthenticated) {
-        const response = await axiosInstance.get("/appointments/", {
+        const response = await axiosInstance.get("/appointments", {
           withCredentials: true,
         });
         setAppointments(response.data.data);
