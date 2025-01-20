@@ -3,7 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { Hospital } from "../models/hospital.model.js";
 
-async function getAccessToken() {
+const mapmyIndiaAccessToken = asyncHandler(async (req, res) => {
   try {
     const response = await axios.post(
       "https://outpost.mappls.com/api/security/oauth/token",
@@ -21,7 +21,10 @@ async function getAccessToken() {
 
     const accessToken = response.data.access_token;
 
-    return { accessToken };
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {accessToken}, "Access token successfully fetched"))
+
   } catch (error) {
     return res
       .status(500)
@@ -33,7 +36,7 @@ async function getAccessToken() {
         )
       );
   }
-}
+})
 
 const getNearbyHospital = asyncHandler(async (req, res) => {
   try {
@@ -108,4 +111,4 @@ const getAllHospitals = asyncHandler(async (req, res) => {
     );
 });
 
-export { getNearbyHospital, getAllHospitals };
+export { getNearbyHospital, getAllHospitals, mapmyIndiaAccessToken };
