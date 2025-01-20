@@ -12,8 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthContext } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
-import axiosInstance from "@/utils/axiosInstance";
-import { GoogleLogin } from "@react-oauth/google";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -24,11 +22,9 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, loading, error, setLoading, setError } = useAuthContext();
+  const { login, loading, error } = useAuthContext();
   const router = useRouter();
   const { isAuthenticated } = useAuthContext();
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleError, setGoogleError] = useState("");
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -48,29 +44,6 @@ export function LoginForm({
     } catch (error) {
       console.error("Login failed:", error);
       // Handle login failure if needed
-    }
-  };
-  const handleGoogleLogin = async (response: any) => {
-    try {
-      setLoading(true);
-      // Send the Google token to the backend for authentication via axios
-      const res = await axiosInstance.get(
-        `/auth/google/callback?code=${response.credential}`,
-        {
-          withCredentials: true, // Make sure cookies are sent with the request
-        }
-      );
-
-      if (res.status === 200) {
-        // On success, redirect to dashboard
-        router.push("/dashboard");
-      } else {
-        setError("Google login failed");
-      }
-    } catch (error) {
-      setError("Google login failed");
-    } finally {
-      setLoading(false);
     }
   };
   return (
@@ -112,10 +85,6 @@ export function LoginForm({
               <Button type="submit" className="w-full">
                 {loading ? "Logging in..." : "Login"}
               </Button>
-              <GoogleLogin
-                onSuccess={handleGoogleLogin}
-                onError={() => setError("Google login failed")}
-              />
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
