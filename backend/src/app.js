@@ -80,7 +80,7 @@ app.use(express.static("public"));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://hospital-management-system-prod-1el8esxvr.vercel.app"],
+    origin: ["http://localhost:3000", "https://hospital-management-system-prod.vercel.app"],
     credentials: true,
   })
 );
