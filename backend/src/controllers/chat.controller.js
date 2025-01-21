@@ -69,12 +69,14 @@ const createChat = asyncHandler(async (req, res) => {
 
     const receiver = await User.findById(userId).select("fullName");
 
+    groupChat.title =  receiver.fullName;
+
     return res
       .status(201)
       .json(
         new ApiResponse(
           201,
-          { groupChat, receiver },
+          groupChat,
           "Individual chat has been created"
         )
       );
