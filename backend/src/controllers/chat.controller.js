@@ -12,25 +12,7 @@ const getUserChats = asyncHandler(async (req, res) => {
       .populate("chatGroups")
       .exec();
 
-    const chats = {
-      groupChat: [],
-      individualChat: [],
-    };
-
-    for (let index = 0; index < userObject.chatGroups.length; index++) {
-      const chatGroup = userObject.chatGroups[index];
-      if (chatGroup.groupchat) {
-        chats.groupChat.push(chatGroup);
-      } else {
-        const recipient = await User.findOne({
-          _id: { $ne: userId },
-          chatGroups: chatGroup._id,
-        });
-
-        chatGroup.title = recipient.fullName;
-        chats.individualChat.push(chatGroup);
-      }
-    }
+    const chats = userObject.chatGroups;
 
     return res
       .status(200)
