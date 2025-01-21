@@ -6,10 +6,6 @@ const chatGroupSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    avatar: {
-      type: String,
-      required: false,
-    },
     groupchat: {
       type: Boolean,
       required: true,
