@@ -14,6 +14,19 @@ const getUserChats = asyncHandler(async (req, res) => {
 
     const chats = userObject.chatGroups;
 
+    for (const chat of chats) {
+      if (!chat.groupchat) {
+        const recipient = await User.findOne({
+          _id: { $ne: userId },
+          chatGroups: chat._id,
+        });
+    
+        if (recipient) {
+          chat.title = recipient.fullName;
+        }
+      }
+    }    
+
     return res
       .status(200)
       .json(
@@ -120,7 +133,7 @@ const getChatUsersBasedOnRole = asyncHandler(async (req, res) => {
 
 const createSpecializationChat = asyncHandler(async (req, res) => {
   const { role } = req.user;
-  const { specialization, title } = req.body;
+  const { specialization } = req.body;
 
   if (!specialization) {
     return res
@@ -161,7 +174,7 @@ const createSpecializationChat = asyncHandler(async (req, res) => {
       }
 
       const groupChat = await ChatGroup.create({
-        title,
+        title: specialization,
         groupchat: true,
       });
 
