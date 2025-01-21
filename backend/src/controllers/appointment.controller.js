@@ -3,6 +3,7 @@ import { Appointment } from "../models/appointment.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { Hospital } from "../models/hospital.model.js";
 import mongoose from "mongoose";
+import { createRazorpayOrder } from "./paymentgateway.controller.js";
 
 const isDoctorFree = async (doctorId, startTime, endTime) => {
   const overlappingAppointments = await Appointment.find({
@@ -48,12 +49,15 @@ const requestAppointment = asyncHandler(async (req, res) => {
       .json(new ApiResponse(409, {}, "Doctor is not free at this time"));
   }
 
+  const formattedStartTime = (new Date(startTime)).toISOString().replace("Z", "+00:00");
+  const formattedEndTime = (new Date(endTime)).toISOString().replace("Z", "+00:00");
+
   const appointment = await Appointment.create({
     patient: req.user?._id,
     doctor: doctorId,
     hospital: hospitalId,
-    startTime,
-    endTime,
+    startTime: formattedStartTime,
+    endTime: formattedEndTime,
     status: "pending",
     onlineAppointment,
   });
@@ -128,7 +132,13 @@ const approveOrRejectAppointment = asyncHandler(async (req, res) => {
       appointment.endTime
     )
   ) {
-    appointment.status = status;
+    appointment.status = appointment.onlineAppointment ? "payment pending" : status;
+    if (appointment.onlineAppointment){
+      const order = await createRazorpayOrder(50000, "appointment", appointment._id);
+      console.log(order.order_id);
+      
+      appointment.paymentId = order._id;
+    }
     await appointment.save({ validateBeforeSave: false });
 
     return res
@@ -245,19 +255,25 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "payments",
+        localField: "paymentId",
+        foreignField: "_id",
+        as: "paymentDetails",
+      },
+    },
+    {
       $unwind: "$patientDetails",
     },
-
     {
       $unwind: "$doctorDetails",
     },
-
-    // Unwind hospital details
     {
-      $unwind: "$hospitalDetails",
+      $unwind: {
+        path: "$hospitalDetails",
+        preserveNullAndEmptyArrays: true, // If no hospital details exist, retain the document
+      },
     },
-
-    // Add hasScanRequest key
     {
       $addFields: {
         hasScanRequest: {
@@ -269,8 +285,6 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
         },
       },
     },
-
-    // Project the required fields
     {
       $project: {
         _id: 1,
@@ -278,6 +292,7 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
         endTime: 1,
         status: 1,
         description: 1,
+        onlineAppointment: 1,
         hasScanRequest: 1,
         scanRequest: { $arrayElemAt: ["$scanRequestDetails", 0] },
         patient: {
@@ -296,11 +311,24 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
           name: "$hospitalDetails.name",
           address: "$hospitalDetails.address",
         },
+        payment: {
+          $cond: {
+            if: {
+              $and: [
+                { $eq: ["$onlineAppointment", true] },
+                { $ne: ["$status", "paid"] },
+              ],
+            },
+            then: { orderId: { $arrayElemAt: ["$paymentDetails.order_id", 0] } },
+            else: null,
+          },
+        },
       },
     },
   ];
-
+  
   const appointments = await Appointment.aggregate(pipeline);
+  
 
   return res
     .status(200)
@@ -572,28 +600,32 @@ const getDoctorAppointments = asyncHandler(async (req, res) => {
   }
 });
 
-const getDoctorAndPatientAppoinments = asyncHandler(async (req, res) => { 
+const getDoctorAndPatientAppoinments = asyncHandler(async (req, res) => {
   const { doctorId } = req.params;
 
   try {
-    const appointments = await Appointment.find({ 
+    const appointments = await Appointment.find({
       doctor: doctorId,
-      $or: [
-        { status: "scheduled" },
-        { status: "rescheduled" },
-      ]
-    })
-  
+      $or: [{ status: "scheduled" }, { status: "rescheduled" }],
+    });
+
     return res
       .status(200)
-      .json(new ApiResponse(200, appointments, "Appointments fetched successfully" ))
+      .json(
+        new ApiResponse(200, appointments, "Appointments fetched successfully")
+      );
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiResponse(500, {}, error.message || "Failed to fetch appointments"));
+      .json(
+        new ApiResponse(
+          500,
+          {},
+          error.message || "Failed to fetch appointments"
+        )
+      );
   }
-
-})
+});
 
 export {
   requestAppointment,

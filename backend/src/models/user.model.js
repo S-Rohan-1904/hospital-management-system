@@ -31,8 +31,12 @@ const userSchema = Schema(
     },
     role: {
       type: String,
-      enum: ["doctor", "patient", "scanCentre"],
+      enum: ["doctor", "patient", "scanCentre", "hospitalAdmin"],
       required: true,
+    },
+    hospitalId: {
+      type: Schema.Types.ObjectId,
+      ref: "Hospital",
     },
     googleId: {
       type: String,
@@ -60,6 +64,9 @@ const userSchema = Schema(
         ref: "ChatGroup",
       },
     ],
+    medicalHistoryUrl: {
+      type: String,
+    },
   },
   {
     timestamps: true,
