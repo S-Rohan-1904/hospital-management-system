@@ -18,13 +18,17 @@ const chatMessageSchema = new Schema(
       type: String,
       required: true,
     },
-    createdAt: {
-      type: Date,
+    socketId: {
+      type: String,
+      required: true,
+    },
+    name: {
+      type: String,
       required: true,
     },
   },
   {
-    timestamps: true,
+    timestamps: true, // Adds `createdAt` and `updatedAt` timestamps
   }
 );
 
