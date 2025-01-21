@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const chatGroupSchema = new mongoose.Schema(
   {
-    groupName: {
+    title: {
       type: String,
       required: false,
     },
