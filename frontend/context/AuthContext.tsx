@@ -114,6 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Redirect to login page if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
+      console.log("Not authenticated");
       router.push("/");
     }
   }, [authLoading, isAuthenticated, router]);

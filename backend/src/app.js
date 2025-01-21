@@ -23,53 +23,96 @@ io.on("connection", (socket) => {
   io.emit("users_response", roomUsers);
   console.log(`User Connected: ${socket.id}`);
 
-  socket.on("join_room", (roomId) => {
-    // Check if the user is already in the room
-    if (roomUsers[roomId] && roomUsers[roomId].includes(socket.id)) {
-      // If the user is already in the room, send feedback and do nothing
-      socket.emit("error", `You are already in room ${roomId}`);
-      return; // Exit the function without adding the user again
+  socket.on("join_room", async (roomId) => {
+    try {
+      if (roomUsers[roomId] && roomUsers[roomId].includes(socket.id)) {
+        socket.emit("error", `You are already in room ${roomId}`);
+        return;
+      }
+
+      socket.join(roomId);
+
+      roomUsers = {
+        ...roomUsers,
+        [roomId]: [...(roomUsers[roomId] || []), socket.id],
+      };
+
+      io.emit("users_response", roomUsers);
+
+      const chatHistory = await ChatMessage.find({ chatGroup: roomId })
+        .sort({ createdAt: 1 })
+        .select("chatGroup sender message name createdAt");
+
+      socket.emit("chat_history", chatHistory);
+
+      console.log(`User with ID: ${socket.id} joined room: ${roomId}`);
+    } catch (error) {
+      console.error("Error handling join_room event:", error);
+      socket.emit("error", "An error occurred while joining the room.");
     }
+  });
 
-    // If not, join the room
-    socket.join(roomId);
+  // Leave Room Event
+  socket.on("leave_room", (roomId, callback) => {
+    try {
+      if (!roomUsers[roomId] || !roomUsers[roomId].includes(socket.id)) {
+        const message = `You are not part of room ${roomId}`;
+        console.error(message);
+        if (callback) callback({ success: false, message });
+        return;
+      }
 
-    // Add user to the room's list of users
-    roomUsers = {
-      ...roomUsers,
-      [roomId]: [...(roomUsers[roomId] || []), socket.id],
-    };
+      // Leave the room
+      socket.leave(roomId);
 
-    // Emit updated room users to all clients
-    io.emit("users_response", roomUsers);
-    console.log(`User with ID: ${socket.id} joined room: ${roomId}`);
+      // Remove the user from the room's user list
+      roomUsers[roomId] = roomUsers[roomId].filter((id) => id !== socket.id);
+
+      // Notify others in the room
+      io.to(roomId).emit("receive_message", {
+        text: `User ${socket.id} has left the room.`,
+        roomId,
+      });
+
+      // Emit the updated room users
+      io.emit("users_response", roomUsers);
+      console.log("roomUsers", roomUsers);
+
+      console.log(`User with ID: ${socket.id} left room: ${roomId}`);
+      if (callback)
+        callback({ success: true, message: "Successfully left the room" });
+    } catch (error) {
+      console.error("Error handling leave_room event:", error);
+      if (callback)
+        callback({
+          success: false,
+          message: "An error occurred while leaving the room.",
+        });
+    }
   });
 
   socket.on("send_message", async (data) => {
     try {
       const { roomId, senderId, text, name } = data;
 
-      // Debugging received data
       console.log("Message received:", data);
 
-      // Save message to the database
       const message = new ChatMessage({
         socketId: socket.id,
         chatGroup: roomId,
         sender: senderId,
         message: text,
-        name: name,
+        name,
       });
 
       await message.save();
 
-      // Emit the saved message to users in the same room
       io.to(roomId).emit("receive_message", {
         socketId: socket.id,
         chatGroup: roomId,
         sender: senderId,
         message: text,
-        name: name,
+        name,
       });
 
       console.log("Message saved and emitted:", {
@@ -77,7 +120,7 @@ io.on("connection", (socket) => {
         chatGroup: roomId,
         sender: senderId,
         message: text,
-        name: name,
+        name,
       });
     } catch (error) {
       console.error("Error saving or emitting message:", error);
@@ -94,8 +137,8 @@ io.on("connection", (socket) => {
       if (users.includes(socket.id)) {
         roomUsers[roomId] = users.filter((id) => id !== socket.id);
         io.emit("receive_message", {
-          text: `user ${socket.id} left the room.`,
-          roomId: roomId,
+          text: `User ${socket.id} left the room.`,
+          roomId,
         });
       }
     }
