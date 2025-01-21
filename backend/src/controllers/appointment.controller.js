@@ -293,6 +293,7 @@ const getAppointmentsById = asyncHandler(async (req, res) => {
         status: 1,
         description: 1,
         onlineAppointment: 1,
+        meetingId: 1,
         hasScanRequest: 1,
         scanRequest: { $arrayElemAt: ["$scanRequestDetails", 0] },
         patient: {
