@@ -100,7 +100,7 @@ const getChatUsersBasedOnRole = asyncHandler(async (req, res) => {
 
     if (role === "doctor") {
       users = await User.find(
-        { role: { $in: ["doctor", "scanCentre"] } },
+        { role: { $in: ["patient", "scanCentre"] } },
         "-password -refreshToken"
       );
     } else if (role === "patient") {
