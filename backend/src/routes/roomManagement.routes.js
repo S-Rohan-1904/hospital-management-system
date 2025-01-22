@@ -3,7 +3,6 @@ import {
   getWardsInHospital,
   allocateBeds,
   changeBed,
-  removeBedOccupation,
   getFoodAvailable,
   orderFood,
   getAllBedOccupation,
@@ -18,7 +17,6 @@ router.route("/allot").post(verifyJWT, allocateBeds);
 router.route("/change").patch(verifyJWT, changeBed);
 router.route("/food").get(verifyJWT, getFoodAvailable);
 router.route("/food/order").post(verifyJWT, orderFood);
-router.route("/:id/remove").patch(verifyJWT, removeBedOccupation);
 router.route("/occupied-rooms").get(verifyJWT, getAllBedOccupation);
 router.route("/discharge").get(verifyJWT, dischargePatient);
 

@@ -7,6 +7,7 @@ import { User } from "../models/user.model.js";
 import { AdmittedPatient } from "../models/admittedPatient.model.js";
 import { FoodOrdered } from "../models/foodOrdered.model.js";
 import { FoodAvailable } from "../models/foodAvailable.model.js";
+import { createRazorpayOrder } from "./paymentgateway.controller.js"
 
 const allotBedInWard = async (wardName, patientId, hospitalId, type) => {
   const wardObject = await Ward.findOne({
@@ -234,66 +235,6 @@ const changeBed = asyncHandler(async (req, res) => {
   }
 });
 
-const addBeds = asyncHandler(async (req, res) => {
-  if (role !== "hospitalAdmin") {
-    return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
-  }
-
-  const { wardId, number } = req.body;
-
-  try {
-    const wardObject = await Ward.findById(wardId);
-    wardObject.capacity += number;
-    await wardObject.save();
-
-    const lastBed = await Bed.find({ ward: wardObject._id }).sort({
-      bedNumber: -1,
-    });
-
-    for (let index = 0; index < number; index++) {
-      await Bed.create({
-        ward: wardObject._id,
-        bedNumber: lastBed + i + 1,
-        isOccupied: false,
-        patientDetails: {
-          user: null,
-          admissionDate: null,
-          dischargeDate: null,
-        },
-      });
-    }
-
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, wardObject, "Rooms have been successfully added")
-      );
-  } catch (error) {
-    return res
-      .status(500)
-      .json(new ApiResponse(500, {}, error.message || "Failed to fetch wards"));
-  }
-});
-
-const removeBedOccupation = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const bed = await Bed.findById(id);
-  console.log(bed);
-
-  bed.isOccupied = false;
-  bed.patientDetails = {
-    user: null,
-    admissionDate: null,
-    dischargeDate: null,
-  };
-
-  await bed.save();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, bed, "Bed has been successfully unoccupied"));
-});
 
 //while discharge calculate the no of days stayed in each room and calculate
 
@@ -306,21 +247,31 @@ const getAllBedOccupation = asyncHandler(async (req, res) => {
     .populate("bedHistory.bed")
     .populate("patientId", "email fullName"); // Populate email and fullName of the patient
 
-  const flattenedResponse = getAdmittedPatients.map(patient => {
-    const lastBedEntry = patient.bedHistory[patient.bedHistory.length - 1]; // Get the last entry of bedHistory
-
-    return {
-      patientId: patient.patientId?._id || "N/A", // Include patientId
-      email: patient.patientId?.email || "N/A",
-      fullName: patient.patientId?.fullName || "N/A",
-      bedId: lastBedEntry?.bed?._id || "N/A", // Include bedId
-      bedNumber: lastBedEntry?.bed?.bedNumber || "N/A",
-      ward: lastBedEntry?.bed?.ward || "N/A",
-      floor: lastBedEntry?.bed?.floor || "N/A",
-      admissionDate: lastBedEntry?.admissionDate || "N/A",
-      dischargeDate: lastBedEntry?.dischargeDate || "Still Admitted",
-    };
-  });
+    const flattenedResponse = await Promise.all(
+      getAdmittedPatients.map(async (patient) => {
+        const lastBedEntry = patient.bedHistory[patient.bedHistory.length - 1];
+    
+        // Fetch the ward details
+        const ward = lastBedEntry?.bed?.ward
+          ? await Ward.findById(lastBedEntry.bed.ward)
+          : { name: "N/A" };
+    
+        return {
+          patientId: patient.patientId?._id || "N/A", // Include patientId
+          email: patient.patientId?.email || "N/A",
+          fullName: patient.patientId?.fullName || "N/A",
+          bedId: lastBedEntry?.bed?._id || "N/A", // Include bedId
+          bedNumber: lastBedEntry?.bed?.bedNumber || "N/A",
+          ward: ward?.name || "N/A",
+          floor: lastBedEntry?.bed?.floor || "N/A",
+          admissionDate: lastBedEntry?.admissionDate || "N/A",
+          dischargeDate: lastBedEntry?.dischargeDate || "Still Admitted",
+        };
+      })
+    );
+    
+    console.log(flattenedResponse);
+  
 
   return res
     .status(200)
@@ -434,7 +385,6 @@ const dischargePatient = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
   const patient = await User.findOne({email});
-  
 
   const admittedPatientObject = await AdmittedPatient.findOne({
     patientId: patient._id,
@@ -477,7 +427,6 @@ const dischargePatient = asyncHandler(async (req, res) => {
   await lastOccupiedWard.save()
 
 
-
   return res
     .status(200)
     .json(new ApiResponse(200, admittedPatientObject, "fklfsjk"))
@@ -489,8 +438,6 @@ export {
   getWardsInHospital,
   allocateBeds,
   changeBed,
-  addBeds,
-  removeBedOccupation,
   getFoodAvailable,
   orderFood,
   getAllBedOccupation,
