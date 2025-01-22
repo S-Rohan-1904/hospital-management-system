@@ -26,51 +26,59 @@ import {
   CalendarCheck2,
   ScrollText,
   MessageCircleMore,
+  Hospital,
 } from "lucide-react";
 import { ChevronUp, User2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import CreateRoomButton from "./CreateRoomButton";
 
-// Menu items.
+// Menu items with role-based access.
 const items = [
   {
     title: "Dashboard",
     url: "/dashboard",
     icon: Home,
+    roles: ["hospital", "doctor", "patient"], // Accessible by all roles
   },
   {
     title: "Appointments",
     url: "/dashboard/appointments",
     icon: CalendarCheck2,
+    roles: ["doctor", "patient"],
   },
   {
     title: "Medical History",
     url: "/dashboard/medical-history",
     icon: ScrollText,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
+    roles: ["doctor", "patient"], // Not accessible by admin
   },
   {
     title: "Scans",
     url: "/dashboard/scans",
     icon: ScrollText,
+    roles: ["doctor", "patient", "scanCentre"],
   },
   {
     title: "Chat",
     url: "/chat-app/chat",
     icon: MessageCircleMore,
+    roles: ["scanCentre", "doctor", "patient"],
+  },
+  {
+    title: "Room Manangement",
+    url: "/dashboard/room-management",
+    icon: Hospital,
+    roles: ["hospitalAdmin"],
   },
 ];
 
 export function AppSidebar() {
   const { setAppointments } = useAppointmentsContext();
   const { setHospitals } = useHospitalsContext();
-  const { logout } = useAuthContext();
+  const { logout, currentUser } = useAuthContext();
   const router = useRouter();
-  const { currentUser } = useAuthContext();
+
   const handleSignOut = async () => {
     try {
       await logout();
@@ -81,6 +89,12 @@ export function AppSidebar() {
       console.log(error);
     }
   };
+
+  // Filter items based on user's role
+  const filteredItems = items.filter((item) =>
+    item.roles.includes(currentUser?.role)
+  );
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -90,7 +104,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent className="mt-3">
             <SidebarMenu>
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="text-lg p-5 hover:pl-7">
                     <Link href={item.url}>

@@ -4,6 +4,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 import { MedicalHistoryProvider } from "@/context/MedicalHistoryContext";
 import { ScansProvider } from "@/context/ScansContext";
+import { RoomManagementProvider } from "@/context/RoomManagementContext";
 
 export default function RootLayout({
   children,
@@ -18,15 +19,17 @@ export default function RootLayout({
         <title>Hospital Management System</title>
       </head>
       <body>
-          <AuthProvider>
-            <MedicalHistoryProvider>
-              <HospitalsProvider>
+        <AuthProvider>
+          <MedicalHistoryProvider>
+            <HospitalsProvider>
+              <RoomManagementProvider>
                 <AppointmentsProvider>
                   <ScansProvider>{children}</ScansProvider>
                 </AppointmentsProvider>
-              </HospitalsProvider>
-            </MedicalHistoryProvider>
-          </AuthProvider>
+              </RoomManagementProvider>
+            </HospitalsProvider>
+          </MedicalHistoryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

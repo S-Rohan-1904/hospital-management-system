@@ -37,6 +37,9 @@ import { toZonedTime } from "date-fns-tz";
 import { AlertCircle, Calendar, Clock, MoreVertical, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import CreateRoomButton from "@/components/CreateRoomButton";
+import { useRoomManagementContext } from "@/context/RoomManagementContext";
+import { useAuthContext } from "@/context/AuthContext";
 
 export interface AppointmentInterface {
   _id: string;
@@ -76,9 +79,14 @@ export function AppointmentsClient() {
     useState<AppointmentInterface | null>(null);
   const [showDescription, setShowDescription] = useState<boolean>(false);
 
+  const { pendingPayments, getPendingPayments } = useRoomManagementContext();
+
+  const { currentUser } = useAuthContext();
+
   useEffect(() => {
     fetchAppointments();
     fetchHospitals();
+    // getPendingPayments(currentUser?.email);
   }, []);
 
   async function handleDelete(id: string) {
@@ -119,6 +127,12 @@ export function AppointmentsClient() {
           <Plus className="w-4 h-4 mr-2" />
           Request Appointment
         </Button>
+        {/* <PaymentButton
+          amount={pendingPayments.totalAmount}
+          type="discharge"
+          id="123456"
+          order_id={pendingPayments.order_id}
+        /> */}
       </div>
       {error && (
         <Alert variant="destructive" className="my-2 flex-col justify-center">
@@ -246,10 +260,17 @@ export function AppointmentsClient() {
                         amount={500}
                         type="appointment"
                         id="123456"
-                        appointment={appointment}
+                        order_id={appointment.payment.orderId}
                       />
                     )}
                 </TableCell>
+                {/* <TableCell>
+                  {["scheduled", "reschedeled"].includes(appointment.status) &&
+                    appointment.onlineAppointment && (
+                      <CreateRoomButton meetingId={appointment.meetingId} />
+                    )}
+                </TableCell> */}
+
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -303,14 +324,6 @@ export function AppointmentsClient() {
                           Delete
                         </DropdownMenuItem>
                       )}
-                      {["scheduled", "reschedeled"].includes(
-                        appointment.status
-                      ) &&
-                        appointment.onlineAppointment && (
-                          <DropdownMenuItem onClick={() => {}}>
-                            Reschedule
-                          </DropdownMenuItem>
-                        )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

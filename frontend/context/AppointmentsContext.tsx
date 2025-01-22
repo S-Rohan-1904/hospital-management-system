@@ -51,6 +51,7 @@ export interface Appointment {
   };
   payment: Payment;
   onlineAppointment: boolean;
+  meetingId: string;
 }
 
 interface AppointmentsContextType {

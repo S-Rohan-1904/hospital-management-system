@@ -4,10 +4,11 @@ import axiosInstance from "../utils/axiosInstance";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 
-enum Role {
+export enum Role {
   Doctor = "doctor",
   Patient = "patient",
   ScanCentre = "scanCentre",
+  Hospital = "hospitalAdmin",
 }
 
 enum Gender {
