@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
 import { ChatMessage } from "./models/chatMessage.model.js";
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -168,6 +169,7 @@ import scanRequestRouter from "./routes/scanRequest.routes.js";
 import medicalHistoryRouter from "./routes/medicalHistory.routes.js";
 import chatRouter from "./routes/chat.routes.js";
 import paymentRouter from "./routes/paymentgateway.routes.js";
+import roomManagementRouter from "./routes/roomManagement.routes.js";
 
 app.use("/api/v1/users/", userRouter);
 app.use("/api/v1/appointments/", appointmentRouter);
@@ -176,5 +178,9 @@ app.use("/api/v1/scan/", scanRequestRouter);
 app.use("/api/v1/history/", medicalHistoryRouter);
 app.use("/api/v1/chat/", chatRouter);
 app.use("/api/v1/payment/", paymentRouter);
+app.use("/api/v1/room",roomManagementRouter);
+
+
+
 
 export { server };
