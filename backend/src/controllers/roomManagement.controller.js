@@ -506,9 +506,11 @@ const dischargePatient = asyncHandler(async (req, res) => {
 
   await sendDischargeEmail(email , totalCost, amount);
 
-  await createRazorpayOrder(amount*100, "discharge", patient._id);
+  const payment = await createRazorpayOrder(amount*100, "discharge", patient._id);
 
-  admittedPatientObject.status = "payment pending"
+  admittedPatientObject.status = "payment pending";
+  admittedPatientObject.paymentId = payment._id;
+  admittedPatientObject.totalAmount = amount;
   await admittedPatientObject.save()
 
   return res
@@ -517,6 +519,29 @@ const dischargePatient = asyncHandler(async (req, res) => {
 
 })
 
+const getPendingPayments = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  const patient = await User.findOne({email});
+
+  const paymentPendingDischargePatient = await AdmittedPatient.find({
+    patientId: patient._id,
+    status: "payment pending",
+  }).populate("paymentId");
+
+  const extractedData = paymentPendingDischargePatient.map(item => ({
+    _id: item._id,
+    totalAmount: item.totalAmount,
+    order_id: item.paymentId.order_id,
+  }));
+  
+  console.log(extractedData);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, extractedData, "pending payments successfully fetched"))
+
+})
 
 export {
   getWardsInHospital,
@@ -526,4 +551,5 @@ export {
   orderFood,
   getAllBedOccupation,
   dischargePatient,
+  getPendingPayments,
 };

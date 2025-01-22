@@ -19,6 +19,13 @@ const admittedPatientSchema = new mongoose.Schema(
       type: String,
       enum: ["admitted","payment pending", "discharged"],
     },
+    paymentId : {
+      type: Schema.Types.ObjectId,
+      ref: "Payment"
+    },
+    totalAmount : {
+      type: Number
+    }
   },
   {
     timestamps: true,
