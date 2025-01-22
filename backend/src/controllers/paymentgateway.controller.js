@@ -3,6 +3,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { Payment } from '../models/payment.model.js';
 import { Appointment } from '../models/appointment.model.js';
+import crypto from "crypto";
 
 const razorpayInstance = new razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -29,9 +30,8 @@ const createRazorpayOrder = async (amount, type, id) => {
 };
 
 const verifyRazorpayPayment = asyncHandler(async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
-    const crypto = require('crypto');
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature,type } = req.body;
+    
     const body = razorpay_order_id + "|" + razorpay_payment_id;
 
     const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -45,7 +45,7 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
         await paymentObject.save()
 
         if (type==="appointment") {
-            const appointment = await Appointment.findById(paymentObject.id);
+            const appointment = await Appointment.findOne({paymentId:razorpay_order_id});
             appointment.status = "scheduled";
             await appointment.save({ validateBeforeSave: false});
         }
