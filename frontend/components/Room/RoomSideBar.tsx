@@ -7,15 +7,35 @@ import { useRoom } from "@/context/RoomContext";
 import { useSocket } from "@/context/SocketContext";
 import { BiMessageAdd } from "react-icons/bi";
 import AddRoomPanel from "./AddRoomPanel";
-import { HomeIcon, User2 } from "lucide-react";
+import { ChevronUp, HomeIcon, User2 } from "lucide-react";
 import Link from "next/link";
 import { useAuthContext } from "@/context/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { SidebarMenuButton } from "../ui/sidebar";
+import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
 
 function RoomSideBar() {
   const [showAddRoomPanel, setShowAddRoomPanel] = useState(false);
   const { rooms, fetchRoomsFromServer, setRooms } = useRoom();
   const { roomUsers } = useSocket();
   const { currentUser } = useAuthContext();
+
+  const { logout } = useAuthContext();
+  const router = useRouter();
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      router.push("/");
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const hideAddRoomPanel = () => setShowAddRoomPanel(false);
 
@@ -67,10 +87,20 @@ function RoomSideBar() {
 
       {/* Current User Section - Pinned to Bottom */}
       {currentUser && (
-        <div className="flex items-center gap-2 p-4 border-t mt-auto">
-          <User2 />
-          <span className="text-sm font-medium">{currentUser?.fullName}</span>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <User2 /> {currentUser?.fullName}
+              <ChevronUp className="ml-auto" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="top"
+            className="w-[--radix-popper-anchor-width]"
+          >
+            <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
     </div>
   );
