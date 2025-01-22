@@ -10,7 +10,9 @@ import {
   useEffect,
 } from "react";
 
-interface Appointment {
+export type Payment = { orderId: string } | null;
+
+export interface Appointment {
   _id: string;
   patient: {
     _id: string;
@@ -47,6 +49,7 @@ interface Appointment {
     updatedAt: string;
     status: string;
   };
+  payment: Payment;
 }
 
 interface AppointmentsContextType {
@@ -68,6 +71,7 @@ interface AppointmentsContextType {
     startTime,
     endTime,
     hospitalId,
+    onlineAppointment,
   }) => Promise<void>;
   acceptAppointment: (id: string) => Promise<void>;
   rejectAppointment: (id: string) => Promise<void>;
@@ -155,13 +159,14 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
     startTime,
     endTime,
     hospitalId,
+    onlineAppointment,
   }) => {
     setLoading(true);
     setError(null);
     try {
       await axiosInstance.post(
         `/appointments`,
-        { doctorId, startTime, endTime, hospitalId, onlineAppointment: false },
+        { doctorId, startTime, endTime, hospitalId, onlineAppointment },
         {
           withCredentials: true,
         }

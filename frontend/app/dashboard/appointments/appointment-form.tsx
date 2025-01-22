@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +61,8 @@ export function AppointmentForm({
   const [selectedHospital, setSelectedHospital] = useState<string>("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [isOnlineAppointment, setIsOnlineAppointment] =
+    useState<boolean>(false);
   const { toast } = useToast();
 
   const handleSelectChangeHospital = (value) => {
@@ -136,6 +139,7 @@ export function AppointmentForm({
           endTime: localEndDate,
           doctorId: selectedDoctor,
           hospitalId: selectedHospital,
+          onlineAppointment: isOnlineAppointment,
         });
 
         console.log("appointment request created");
@@ -161,6 +165,15 @@ export function AppointmentForm({
           </DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4" id="-description">
+          <div className="flex items-center justify-between w-[45%]">
+            <Label htmlFor="online-appointment">Online Appointment</Label>
+            <Switch
+              id="online-appointment"
+              checked={isOnlineAppointment}
+              onCheckedChange={(value) => setIsOnlineAppointment(value)}
+            />
+          </div>
+
           <div className="space-y-2 w-[45%]">
             <Label htmlFor="start-date">Start Date & Time</Label>
             <Input

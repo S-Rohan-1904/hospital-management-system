@@ -4,6 +4,6 @@ import { verifyRazorpayPayment } from "../controllers/paymentgateway.controller.
 
 const router = Router();
 
-router.route("/verify-payment").get(verifyJWT, verifyRazorpayPayment);
+router.route("/verify-payment").post(verifyJWT, verifyRazorpayPayment);
 
 export default router;

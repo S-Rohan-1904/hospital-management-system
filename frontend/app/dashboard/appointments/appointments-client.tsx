@@ -1,5 +1,6 @@
 "use client";
 
+import PaymentButton from "@/components/payment-button";
 import Loading from "../loading";
 import { AppointmentDescription } from "./appointment-description";
 import { AppointmentForm } from "./appointment-form";
@@ -29,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAppointmentsContext } from "@/context/AppointmentsContext";
+import { Payment, useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -59,6 +60,7 @@ export interface AppointmentInterface {
     address: string;
   };
   description?: string;
+  payment: Payment;
 }
 
 export function AppointmentsClient() {
@@ -234,6 +236,18 @@ export function AppointmentsClient() {
                       <div className="flex items-center">N/A</div>
                     )}
                   </div>
+                </TableCell>
+                <TableCell>
+                  {appointment.payment &&
+                    appointment.payment.orderId &&
+                    appointment.status === "payment pending" && (
+                      <PaymentButton
+                        amount={500}
+                        type="appointment"
+                        id="123456"
+                        appointment={appointment}
+                      />
+                    )}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
