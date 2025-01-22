@@ -100,7 +100,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       onClick={handlePayment}
       className="bg-blue-500 text-white px-4 py-2 rounded"
     >
-      Pay Now
+      Pay
     </button>
   );
 };

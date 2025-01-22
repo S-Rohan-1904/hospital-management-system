@@ -50,6 +50,7 @@ export interface Appointment {
     status: string;
   };
   payment: Payment;
+  onlineAppointment: boolean;
 }
 
 interface AppointmentsContextType {

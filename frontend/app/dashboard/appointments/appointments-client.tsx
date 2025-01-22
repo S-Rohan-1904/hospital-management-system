@@ -61,6 +61,7 @@ export interface AppointmentInterface {
   };
   description?: string;
   payment: Payment;
+  onlineAppointment: boolean;
 }
 
 export function AppointmentsClient() {
@@ -302,6 +303,14 @@ export function AppointmentsClient() {
                           Delete
                         </DropdownMenuItem>
                       )}
+                      {["scheduled", "reschedeled"].includes(
+                        appointment.status
+                      ) &&
+                        appointment.onlineAppointment && (
+                          <DropdownMenuItem onClick={() => {}}>
+                            Reschedule
+                          </DropdownMenuItem>
+                        )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
