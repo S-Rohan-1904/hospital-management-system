@@ -20,6 +20,6 @@ router.route("/food").get(verifyJWT, getFoodAvailable);
 router.route("/food/order").post(verifyJWT, orderFood);
 router.route("/occupied-rooms").get(verifyJWT, getAllBedOccupation);
 router.route("/discharge").get(verifyJWT, dischargePatient);
-router.route("/pending-payments").get(verifyJWT, getPendingPayments);
+router.route("/pending-payments").post(verifyJWT, getPendingPayments);
 
 export default router;
