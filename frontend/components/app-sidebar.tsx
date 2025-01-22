@@ -20,8 +20,13 @@ import {
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
-import { url } from "inspector";
-import { Home, Settings, CalendarCheck2, ScrollText } from "lucide-react";
+import {
+  Home,
+  Settings,
+  CalendarCheck2,
+  ScrollText,
+  MessageCircleMore,
+} from "lucide-react";
 import { ChevronUp, User2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -52,6 +57,11 @@ const items = [
     title: "Scans",
     url: "/dashboard/scans",
     icon: ScrollText,
+  },
+  {
+    title: "Chat",
+    url: "/chat-app/chat",
+    icon: MessageCircleMore,
   },
 ];
 
@@ -108,7 +118,6 @@ export function AppSidebar() {
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                <DropdownMenuItem>Account</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
                   Log out
                 </DropdownMenuItem>
