@@ -4,6 +4,8 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { Payment } from "../models/payment.model.js";
 import { Appointment } from "../models/appointment.model.js";
 import crypto from "crypto";
+import { AdmittedPatient } from "../models/admittedPatient.model.js";
+
 const razorpayInstance = new razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -17,8 +19,6 @@ const createRazorpayOrder = async (amount, type, id) => {
   };
 
   const order = await razorpayInstance.orders.create(options);
-
-  console.log(order);
 
   const payment = await Payment.create({
     type,
@@ -52,6 +52,12 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
       });
       appointment.status = "scheduled";
       await appointment.save({ validateBeforeSave: false });
+    } else {
+      const admittedPatientObject = await AdmittedPatient.findOne({
+        paymentId: paymentObject._id,
+      });
+      admittedPatientObject.status = "discharged";
+      await admittedPatientObject.save({ validateBeforeSave: false });
     }
 
     return res
