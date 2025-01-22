@@ -33,7 +33,9 @@ export default function SocketProvider({
   const router = useRouter();
 
   useEffect(() => {
-    const socket = io("http://localhost:8000");
+    const socket = io(
+      "https://hospital-management-system-backend-lewn.onrender.com"
+    );
 
     socket.on("connect", () => {
       console.log("Connected to the socket server!");
