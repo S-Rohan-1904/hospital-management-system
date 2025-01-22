@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
 import { ChatMessage } from "./models/chatMessage.model.js";
+import { sendEmail } from "./utils/emailService.js";
+import Agenda from 'agenda';
 
 const app = express();
 const server = http.createServer(app);
@@ -180,7 +182,14 @@ app.use("/api/v1/chat/", chatRouter);
 app.use("/api/v1/payment/", paymentRouter);
 app.use("/api/v1/room",roomManagementRouter);
 
+const agenda = new Agenda({ db: { address: `${process.env.MONGODB_URI}/agenda` } });
+
+agenda.define('send email', async (job) => {
+  const { to, subject, text , html} = job.attrs.data;
+  await sendEmail({ to, subject, text , html});
+});
+
+agenda.start();
 
 
-
-export { server };
+export { server , agenda};

@@ -7,7 +7,9 @@ import { User } from "../models/user.model.js";
 import { AdmittedPatient } from "../models/admittedPatient.model.js";
 import { FoodOrdered } from "../models/foodOrdered.model.js";
 import { FoodAvailable } from "../models/foodAvailable.model.js";
-import { createRazorpayOrder } from "./paymentgateway.controller.js"
+import { createRazorpayOrder } from "./paymentgateway.controller.js";
+import { agenda } from "../app.js"
+
 
 const allotBedInWard = async (wardName, patientId, hospitalId, type) => {
   const wardObject = await Ward.findOne({
@@ -145,8 +147,6 @@ const allocateBeds = asyncHandler(async (req, res) => {
       status: "admitted"
     })
     
-    console.log(admittedPatientObject)
-
     if (admittedPatientObject) {
       return res
         .status(409)
@@ -269,9 +269,6 @@ const getAllBedOccupation = asyncHandler(async (req, res) => {
         };
       })
     );
-    
-    console.log(flattenedResponse);
-  
 
   return res
     .status(200)
@@ -319,7 +316,6 @@ const orderFood = asyncHandler(async (req, res) => {
       const patientUserObject = await User.findOne({email});
 
       const admittedPatient = await AdmittedPatient.findOne({patientId: patientUserObject._id});
-      console.log(admittedPatient);
       
       if (!admittedPatient) {
         return res
@@ -394,8 +390,6 @@ const dischargePatient = asyncHandler(async (req, res) => {
   .populate("patientId", "email fullName");
 
   admittedPatientObject.bedHistory[admittedPatientObject.bedHistory.length - 1].dischargeDate = new Date()
-  admittedPatientObject.status = "payment pending"
-  await admittedPatientObject.save()
 
   const totalCost = await calculateCost(admittedPatientObject.bedHistory);
 
@@ -416,7 +410,7 @@ const dischargePatient = asyncHandler(async (req, res) => {
   totalCost.Food = totalAmount
 
   const lastOccupiedBed = await Bed.findById(
-    patient.bedHistory[patient.bedHistory.length - 1].bed._id
+    admittedPatientObject.bedHistory[admittedPatientObject.bedHistory.length - 1].bed._id
   )
 
   lastOccupiedBed.isOccupied = false;
@@ -426,10 +420,100 @@ const dischargePatient = asyncHandler(async (req, res) => {
   lastOccupiedWard.unoccupiedBeds = lastOccupiedWard.unoccupiedBeds + 1;
   await lastOccupiedWard.save()
 
+  const amount = Object.values(totalCost).reduce((sum, value) => sum + value, 0);
+
+  
+  async function sendDischargeEmail(email, data, amount) {
+
+    let rows = '';
+    let totalCost = 0;
+
+    // Calculate total cost dynamically
+    for (const service in data) {
+      rows += `
+        <tr>
+          <td>${service}</td>
+          <td>${data[service]}</td>
+        </tr>
+      `;
+      totalCost += data[service];
+    }
+    
+    // The HTML string with dynamic content
+    const htmlToSendInMail = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+          line-height: 1.6;
+        }
+        h1 {
+          color: #4CAF50;
+        }
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin-top: 20px;
+        }
+        table th, table td {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+        }
+        table th {
+          background-color: #f2f2f2;
+      }
+      table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Total Cost Breakdown</h1>
+    <p>Below is the detailed breakdown of the total cost:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Cost (in currency)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        <tr>
+      <th>Total</th>
+          <th>${totalCost}</th>
+        </tr>
+      </tbody>
+    </table>
+    <p>If you have any questions or need further details, please let us know.</p>
+  </body>
+  </html>
+`;
+
+  
+    // Send email using Agenda
+    await agenda.now("send email", {
+      to: email,
+      subject: "Discharge Receipt",
+      text: "",
+      html: htmlToSendInMail,
+    });
+  }  
+
+  await sendDischargeEmail(email , totalCost, amount);
+
+  await createRazorpayOrder(amount*100, "discharge", patient._id);
+
+  admittedPatientObject.status = "payment pending"
+  await admittedPatientObject.save()
 
   return res
     .status(200)
-    .json(new ApiResponse(200, admittedPatientObject, "fklfsjk"))
+    .json(new ApiResponse(200, admittedPatientObject, "Patient discharged"))
 
 })
 
