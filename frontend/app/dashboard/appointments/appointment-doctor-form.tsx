@@ -12,12 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
-import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { add } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 interface AppointmentFormProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function AppointmentDoctorForm({
   onOpenChange,
   appointment = null,
 }: AppointmentFormProps) {
+  const { toast } = useToast();
   const { updateDoctorAppointment } = useAppointmentsContext();
   const [startDate, setStartDate] = useState<string>(
     format(
@@ -49,7 +51,6 @@ export function AppointmentDoctorForm({
   );
 
   const [description, setDescription] = useState<string>("");
-  const { toast } = useToast();
 
   function convertUTCToLocal(utcDateString) {
     const utcDate = new Date(utcDateString);
@@ -104,6 +105,12 @@ export function AppointmentDoctorForm({
           startTime: localStartDate,
           endTime: localEndDate,
           description,
+        });
+
+        toast({
+          title: "Appointment Updated",
+          description: "The appointment was successfully updated",
+          duration: 3000,
         });
       }
       console.log("appointment updated");
@@ -171,6 +178,7 @@ export function AppointmentDoctorForm({
           </div>
         </form>
       </DialogContent>
+      <Toaster />
     </Dialog>
   );
 }

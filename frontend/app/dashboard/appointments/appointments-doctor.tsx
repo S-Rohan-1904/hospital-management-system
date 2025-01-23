@@ -31,11 +31,13 @@ import {
 } from "@/components/ui/table";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useScansContext } from "@/context/ScansContext";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { AlertCircle, Calendar, Clock, MoreVertical, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 export interface AppointmentInterface {
   _id: string;
@@ -75,6 +77,7 @@ export interface AppointmentInterface {
 }
 
 export function AppointmentsDoctor() {
+  const { toast } = useToast();
   const {
     appointments,
     loading,
@@ -115,6 +118,10 @@ export function AppointmentsDoctor() {
   async function handleDelete(id: string) {
     try {
       await deleteScan(id);
+      toast({
+        title: "Scan Deleted",
+        description: "Scan deleted successfully",
+      });
       setDeleteDialogOpen(false);
       router.refresh();
     } catch (err) {
@@ -124,6 +131,10 @@ export function AppointmentsDoctor() {
   const acceptAppointmentHandler = async (selectedAppointmentId: string) => {
     try {
       const response = await acceptAppointment(selectedAppointmentId);
+      toast({
+        title: "Appointment Accepted",
+        description: "Appointment accepted successfully",
+      });
       console.log(response);
     } catch (error) {
       console.log(error);
@@ -132,6 +143,10 @@ export function AppointmentsDoctor() {
   const rejectAppointmentHandler = async (selectedAppointmentId: string) => {
     try {
       const response = await rejectAppointment(selectedAppointmentId);
+      toast({
+        title: "Appointment Rejected",
+        description: "Appointment rejected successfully",
+      });
       console.log(response);
     } catch (error) {
       console.log(error);
@@ -145,13 +160,6 @@ export function AppointmentsDoctor() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Appointments</h1>
       </div>
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -433,6 +441,7 @@ export function AppointmentsDoctor() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Toaster />
     </>
   );
 }

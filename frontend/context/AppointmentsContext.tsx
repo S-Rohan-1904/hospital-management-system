@@ -96,6 +96,10 @@ export const AppointmentsProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    setError(null);
+  }, []);
+
   const fetchAppointments = async () => {
     setLoading(true);
     setError(null);

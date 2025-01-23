@@ -17,8 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRoomManagementContext } from "@/context/RoomManagementContext";
-import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 interface RoomAllotmentFormProps {
   open: boolean;
@@ -128,6 +129,7 @@ export function RoomAllotmentForm({
           </div>
         </form>
       </DialogContent>
+      <Toaster />
     </Dialog>
   );
 }

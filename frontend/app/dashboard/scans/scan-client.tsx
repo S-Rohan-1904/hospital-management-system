@@ -28,9 +28,11 @@ import {
 } from "@/components/ui/table";
 import { useScansContext } from "@/context/ScansContext";
 import { format } from "date-fns";
-import { AlertCircle, Calendar, Clock, MoreVertical, Plus } from "lucide-react";
+import { AlertCircle, Clock, MoreVertical } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 export interface ScanInterface {
   _id: string;
@@ -85,6 +87,7 @@ export interface ScanInterface {
 }
 
 export function ScansClientPage() {
+  const { toast } = useToast();
   const router = useRouter();
   const { completeScan, updateScanDocument, loading, error } =
     useScansContext();
@@ -115,8 +118,16 @@ export function ScansClientPage() {
       let response;
       if (selectedScan.status === "accepted") {
         response = await completeScan(formData, selectedScan?._id);
+        toast({
+          title: "Success",
+          description: "Scan completed successfully.",
+        });
       } else {
         response = await updateScanDocument(formData, selectedScan?._id);
+        toast({
+          title: "Success",
+          description: "Scan document updated successfully.",
+        });
       }
       if (response) {
         console.log("Upload successful:", response);
@@ -140,6 +151,10 @@ export function ScansClientPage() {
   const acceptScanHandler = async (selectedScanId: string) => {
     try {
       const response = await acceptScan(selectedScanId);
+      toast({
+        title: "Scan Accepted",
+        description: "Scan accepted successfully",
+      });
       console.log(response);
     } catch (error) {
       console.log(error);
@@ -148,6 +163,10 @@ export function ScansClientPage() {
   const rejectScanHandler = async (selectedScanId: string) => {
     try {
       const response = await rejectScan(selectedScanId);
+      toast({
+        title: "Scan Rejected",
+        description: "Scan rejected successfully",
+      });
       console.log(response);
     } catch (error) {
       console.log(error);
@@ -326,6 +345,7 @@ export function ScansClientPage() {
           </div>
         </DialogContent>
       </Dialog>
+      <Toaster />
     </>
   );
 }

@@ -60,12 +60,6 @@ export default function RoomManagementPage() {
         </Button>
       </div>
 
-      {error && (
-        <Alert variant="destructive" className="my-2">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
       <div className="rounded-md border">
         <Table>
           <TableHeader>

@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRoomManagementContext } from "@/context/RoomManagementContext";
+import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 
 interface OrderFoodFormProps {
@@ -53,13 +54,6 @@ export function OrderFoodForm({
 
     const foodItem = foodAvailable.find((item) => item._id === selectedFood);
     if (foodItem) {
-      console.log({
-        foodId: foodItem._id,
-        name: foodItem.foodItem,
-        price: foodItem.price,
-        quantity,
-      });
-
       setOrderList((prev) => [
         ...prev,
         {
@@ -179,6 +173,7 @@ export function OrderFoodForm({
           </div>
         </div>
       </DialogContent>
+      <Toaster />
     </Dialog>
   );
 }

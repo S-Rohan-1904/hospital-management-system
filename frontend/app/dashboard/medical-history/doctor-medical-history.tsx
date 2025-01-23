@@ -50,8 +50,11 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DoctorMedicalHistory() {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedPatient, setSelectedPatient] = useState("");
@@ -114,6 +117,11 @@ export default function DoctorMedicalHistory() {
       anchor.click();
       document.body.removeChild(anchor);
     }
+
+    toast({
+      title: "Success",
+      description: "Report downloaded successfully.",
+    });
   };
 
   const router = useRouter();
@@ -123,9 +131,16 @@ export default function DoctorMedicalHistory() {
       await deleteMedicalHistory(id, currentUser._id);
       setDeleteDialogOpen(false);
       router.refresh();
+      toast({
+        title: "Success",
+        description: "Medical history deleted successfully.",
+      });
     } catch (error) {
       console.error("Error deleting medical history:", error);
-      alert("Failed to delete medical history.");
+      toast({
+        title: "Error",
+        description: "Failed to delete medical history.",
+      });
     }
   };
 
@@ -146,6 +161,10 @@ export default function DoctorMedicalHistory() {
     // Generate the zip file and download it
     zip.generateAsync({ type: "blob" }).then((content) => {
       saveAs(content, "scan_documents.zip");
+    });
+    toast({
+      title: "Success",
+      description: "Scan documents downloaded successfully.",
     });
   };
 
@@ -361,6 +380,7 @@ export default function DoctorMedicalHistory() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
+        <Toaster />
       </AlertDialog>
     </div>
   );

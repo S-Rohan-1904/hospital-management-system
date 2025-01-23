@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 // Import your useAuthContext hook
 
@@ -30,6 +32,7 @@ export function RegisterForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const { toast } = useToast();
   const router = useRouter();
   const { register, loading, error } = useAuthContext();
   const [role, setRole] = useState<string>("");
@@ -57,6 +60,10 @@ export function RegisterForm({
       }
       console.log(response);
     } catch (err) {
+      toast({
+        title: "Error",
+        description: "Registration failed",
+      });
       console.error(err);
     }
   };
@@ -152,6 +159,7 @@ export function RegisterForm({
           </form>
         </CardContent>
       </Card>
+      <Toaster />
     </div>
   );
 }

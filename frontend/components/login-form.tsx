@@ -15,11 +15,13 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login, loading, error } = useAuthContext();
@@ -42,6 +44,10 @@ export function LoginForm({
         router.push("/dashboard");
       }
     } catch (error) {
+      toast({
+        title: "Error",
+        description: "Login failed",
+      });
       console.error("Login failed:", error);
       // Handle login failure if needed
     }
@@ -95,6 +101,7 @@ export function LoginForm({
           </form>
         </CardContent>
       </Card>
+      <Toaster />
     </div>
   );
 }

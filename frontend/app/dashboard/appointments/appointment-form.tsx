@@ -20,12 +20,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useHospitalsContext } from "@/context/HospitalsContext";
-import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { add } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 interface AppointmentFormProps {
   open: boolean;
@@ -38,6 +39,7 @@ export function AppointmentForm({
   onOpenChange,
   appointment = null,
 }: AppointmentFormProps) {
+  const { toast } = useToast();
   const { hospitals } = useHospitalsContext();
 
   const { requestAppointment, updateAppointment } = useAppointmentsContext();
@@ -63,7 +65,6 @@ export function AppointmentForm({
   const [error, setError] = useState<string | null>(null);
   const [isOnlineAppointment, setIsOnlineAppointment] =
     useState<boolean>(false);
-  const { toast } = useToast();
 
   const handleSelectChangeHospital = (value) => {
     setSelectedHospital(value);
@@ -118,7 +119,11 @@ export function AppointmentForm({
   async function handleSubmit() {
     try {
       if (startDate > endDate) {
-        setError("End time must be after start time");
+        toast({
+          title: "Error",
+          description: "End Time must be after start time",
+          variant: "destructive",
+        });
         return;
       }
       if (appointment) {
@@ -131,6 +136,11 @@ export function AppointmentForm({
           doctor: selectedDoctor,
           hospital: selectedHospital,
         });
+        toast({
+          title: "Appointment Updated",
+          description: "The appointment was successfully updated",
+          duration: 3000,
+        });
       } else {
         const localStartDate = convertUTCToLocal(startDate);
         const localEndDate = convertUTCToLocal(endDate);
@@ -140,6 +150,12 @@ export function AppointmentForm({
           doctorId: selectedDoctor,
           hospitalId: selectedHospital,
           onlineAppointment: isOnlineAppointment,
+        });
+
+        toast({
+          title: "Appointment Requested",
+          description: "The appointment request was successfully created.",
+          duration: 3000,
         });
 
         console.log("appointment request created");
@@ -258,6 +274,7 @@ export function AppointmentForm({
           </div>
         </form>
       </DialogContent>
+      <Toaster />
     </Dialog>
   );
 }

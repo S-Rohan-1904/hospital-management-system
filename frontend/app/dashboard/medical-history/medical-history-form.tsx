@@ -34,12 +34,14 @@ import { useAppointmentsContext } from "@/context/AppointmentsContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { useMedicalHistoryContext } from "@/context/MedicalHistoryContext";
 import { MedicalHistory } from "@/context/MedicalHistoryContext";
-import { useToast } from "@/hooks/use-toast";
 import { add, format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { ChevronsUpDown, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface MedicalHistoryFormProps {
   open: boolean;
@@ -52,12 +54,12 @@ export function MedicalHistoryForm({
   onOpenChange,
   history = null,
 }: MedicalHistoryFormProps) {
+  const { toast } = useToast();
   const { getAllPatients } = useMedicalHistoryContext();
   const { getDoctorAndPatientAppointments } = useAppointmentsContext();
   const { createMedicalHistory, updateMedicalHistory } =
     useMedicalHistoryContext();
   const { currentUser } = useAuthContext();
-  const { toast } = useToast();
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [appointments, setAppointments] = useState(null);
   const [startDate, setStartDate] = useState<string>("");
@@ -155,6 +157,10 @@ export function MedicalHistoryForm({
           selectedPatient,
           currentUser._id
         );
+        toast({
+          title: "Success",
+          description: "Medical history updated successfully",
+        });
       } else {
         await createMedicalHistory(
           selectedPatient,
@@ -164,6 +170,10 @@ export function MedicalHistoryForm({
           diagnosis,
           description
         );
+        toast({
+          title: "Success",
+          description: "Medical history created successfully",
+        });
       }
 
       router.refresh();
@@ -344,7 +354,14 @@ export function MedicalHistoryForm({
             />
           </div>
 
-          {error && <p className="text-red-500">{error}</p>}
+          {error && (
+            <Alert
+              variant="destructive"
+              className="my-2 flex-col justify-center"
+            >
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
           {/* Submit Button */}
           <div className="flex justify-end">
@@ -363,6 +380,7 @@ export function MedicalHistoryForm({
           </div>
         </form>
       </DialogContent>
+      <Toaster />
     </Dialog>
   );
 }

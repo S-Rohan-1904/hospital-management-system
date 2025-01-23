@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -19,14 +18,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppointmentsContext } from "@/context/AppointmentsContext";
-import { useHospitalsContext } from "@/context/HospitalsContext";
 import { useScansContext } from "@/context/ScansContext";
-import { useToast } from "@/hooks/use-toast";
-import { format, set } from "date-fns";
-import { add } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 export interface ScanInterface {
   _id: string;
@@ -55,13 +51,13 @@ export function ScanDoctorForm({
   scan = null,
   setSelectedAppointment,
 }: AppointmentFormProps) {
+  const { toast } = useToast();
   const { requestScan, updateScan, scanCentres } = useScansContext();
   const [scanDescription, setScanDescription] = useState(
     scan?.description || ""
   );
   const [selectedScanCentre, setSelectedScanCentre] = useState<string>("");
   const { fetchAppointments } = useAppointmentsContext();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (scan) {
@@ -91,6 +87,10 @@ export function ScanDoctorForm({
           description: scanDescription,
           scanCentre: selectedScanCentre,
         });
+        toast({
+          title: "Success",
+          description: "Scan request updated successfully",
+        });
         await fetchAppointments();
         console.log("Scan request updated");
       } else {
@@ -98,6 +98,10 @@ export function ScanDoctorForm({
           scanCentre: selectedScanCentre,
           appointment: appointmentId,
           description: scanDescription,
+        });
+        toast({
+          title: "Success",
+          description: "Scan request submitted successfully",
         });
         await fetchAppointments();
       }
@@ -163,6 +167,7 @@ export function ScanDoctorForm({
           </div>
         </form>
       </DialogContent>
+      <Toaster />
     </Dialog>
   );
 }
