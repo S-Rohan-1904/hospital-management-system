@@ -22,8 +22,8 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   order_id,
 }) => {
   const { fetchAppointments } = useAppointmentsContext();
-  const {getPendingPayments} = useRoomManagementContext()
-  const {fetchAuthStatus} = useAuthContext()
+  const { getPendingPayments } = useRoomManagementContext();
+  const { fetchAuthStatus } = useAuthContext();
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
@@ -41,11 +41,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       alert("Failed to load Razorpay SDK. Please try again.");
       return;
     }
-
-    
-    
     try {
-      
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Razorpay key_id from backend
         amount: amount * 100,
@@ -54,14 +50,8 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         description: "Payment for your service",
         order_id: order_id, // Razorpay order_id
         handler: async function (response: any) {
-          console.log(100000);
           const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
             response;
-          console.log({
-            razorpay_order_id,
-            razorpay_payment_id,
-            razorpay_signature,
-          });
           // Step 3: Verify payment on the backend
           const verificationResponse = await axiosInstance.post(
             "/payment/verify-payment",
@@ -76,12 +66,10 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
           if (verificationResponse.data.data.success === true) {
             console.log("Payment successful and verified!");
             fetchAppointments();
-            const currentUser = await fetchAuthStatus()
-            if(currentUser) {
-
-              getPendingPayments(currentUser.email)
+            const currentUser = await fetchAuthStatus();
+            if (currentUser) {
+              getPendingPayments(currentUser.email);
             }
-            
           } else {
             console.log("Payment verification failed.");
           }
@@ -108,7 +96,11 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     }
   };
 
-  return <Button onClick={handlePayment}>Pay</Button>;
+  return (
+    <Button onClick={handlePayment} className="flex-end">
+      {type === "discharge" ? "Pay Discharge Dues" : "Pay"}
+    </Button>
+  );
 };
 
 export default PaymentButton;

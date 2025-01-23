@@ -81,24 +81,22 @@ export function AppointmentsClient() {
 
   const { pendingPayments, getPendingPayments } = useRoomManagementContext();
 
-  const { currentUser,fetchAuthStatus } = useAuthContext();
+  const { currentUser, fetchAuthStatus } = useAuthContext();
 
   useEffect(() => {
-    (async()=>{
+    (async () => {
       const user = await fetchAuthStatus();
-      if(user && user.role === "patient") {
-
+      if (user && user.role === "patient") {
         await getPendingPayments(user?.email);
       }
-    })()
+    })();
 
     fetchAppointments();
     fetchHospitals();
-    
+
     console.log(currentUser?.email);
-    
+
     console.log("pendingPayments", pendingPayments);
-    
   }, []);
 
   async function handleDelete(id: string) {
@@ -129,22 +127,25 @@ export function AppointmentsClient() {
     <>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Appointments</h1>
-
-        <Button
-          onClick={() => {
-            setSelectedAppointment(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Request Appointment
-        </Button>
-        {pendingPayments.length>0 &&<PaymentButton
-          amount={pendingPayments[0].totalAmount}
-          type="discharge"
-          id="123456"
-          order_id={pendingPayments[0].order_id}
-        /> }
+        <div className="flex gap-2 justify-center align-middle">
+          <Button
+            onClick={() => {
+              setSelectedAppointment(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Request Appointment
+          </Button>
+          {pendingPayments.length > 0 && (
+            <PaymentButton
+              amount={pendingPayments[0].totalAmount}
+              type="discharge"
+              id="123456"
+              order_id={pendingPayments[0].order_id}
+            />
+          )}
+        </div>
       </div>
       {error && (
         <Alert variant="destructive" className="my-2 flex-col justify-center">
