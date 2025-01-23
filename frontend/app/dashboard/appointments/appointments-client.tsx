@@ -81,12 +81,24 @@ export function AppointmentsClient() {
 
   const { pendingPayments, getPendingPayments } = useRoomManagementContext();
 
-  const { currentUser } = useAuthContext();
+  const { currentUser,fetchAuthStatus } = useAuthContext();
 
   useEffect(() => {
+    (async()=>{
+      const user = await fetchAuthStatus();
+      if(user && user.role === "patient") {
+
+        await getPendingPayments(user?.email);
+      }
+    })()
+
     fetchAppointments();
     fetchHospitals();
-    // getPendingPayments(currentUser?.email);
+    
+    console.log(currentUser?.email);
+    
+    console.log("pendingPayments", pendingPayments);
+    
   }, []);
 
   async function handleDelete(id: string) {
@@ -127,12 +139,12 @@ export function AppointmentsClient() {
           <Plus className="w-4 h-4 mr-2" />
           Request Appointment
         </Button>
-        {/* <PaymentButton
-          amount={pendingPayments.totalAmount}
+        {pendingPayments.length>0 &&<PaymentButton
+          amount={pendingPayments[0].totalAmount}
           type="discharge"
           id="123456"
-          order_id={pendingPayments.order_id}
-        /> */}
+          order_id={pendingPayments[0].order_id}
+        /> }
       </div>
       {error && (
         <Alert variant="destructive" className="my-2 flex-col justify-center">
