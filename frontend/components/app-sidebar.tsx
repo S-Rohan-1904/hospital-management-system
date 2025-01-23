@@ -39,7 +39,7 @@ const items = [
     title: "Dashboard",
     url: "/dashboard",
     icon: Home,
-    roles: ["hospital", "doctor", "patient"], // Accessible by all roles
+    roles: ["hospital", "doctor", "patient", "scanCentre", "hospitalAdmin"], // Accessible by all roles
   },
   {
     title: "Appointments",

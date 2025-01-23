@@ -8,7 +8,7 @@ export enum Role {
   Doctor = "doctor",
   Patient = "patient",
   ScanCentre = "scanCentre",
-  Hospital = "hospitalAdmin",
+  HospitalAdmin = "hospitalAdmin",
 }
 
 enum Gender {
@@ -42,7 +42,7 @@ interface AuthResponseDoctor extends BaseUser {
 }
 
 interface AuthResponseOther extends BaseUser {
-  role: Role.Patient | Role.ScanCentre;
+  role: Role.Patient | Role.ScanCentre | Role.HospitalAdmin;
   specialization?: never;
 }
 

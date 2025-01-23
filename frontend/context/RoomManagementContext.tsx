@@ -34,8 +34,27 @@ interface FoodItem {
   __v: number;
 }
 
+interface Hospital {
+  _id: string;
+  name: string;
+  address: string;
+  contact: string;
+}
+
+interface WardDetails {
+  unoccupiedBeds: number;
+  bedCost: number;
+}
+
+export interface HospitalData {
+  hospital: Hospital;
+  wardDetails: {
+    [wardName: string]: WardDetails;
+  };
+}
+
 interface RoomManagementContextType {
-  wards: string[];
+  wards: HospitalData;
   occupiedBeds: Room[];
   foodAvailable: FoodItem[];
   loading: boolean;
@@ -68,7 +87,7 @@ export const RoomManagementProvider = ({
   children: ReactNode;
 }) => {
   const { isAuthenticated } = useAuthContext();
-  const [wards, setWards] = useState<string[]>([]);
+  const [wards, setWards] = useState<HospitalData>();
   const [occupiedBeds, setOccupiedBeds] = useState<Room[]>([]);
   const [foodAvailable, setFoodAvailable] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);

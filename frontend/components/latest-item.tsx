@@ -12,15 +12,20 @@ import { Button } from "@/components/ui/button";
 import { Calendar, CheckCircle, XCircle } from "lucide-react";
 import { Appointment } from "@/context/AppointmentsContext";
 import { Role } from "@/context/AuthContext"; // Import Role from your context
+import { useEffect } from "react";
 
 interface LatestItemCardProps {
   latestItem: Appointment | null;
 }
 
 export default function LatestItemCard({ latestItem }: LatestItemCardProps) {
+  useEffect(() => {
+    console.log(latestItem);
+  }, []);
+
   if (!latestItem) {
     return (
-      <Card className="bg-gray-800 text-white p-6 shadow-md">
+      <Card className="bg-black-500 text-white p-6 shadow-md mt-10">
         <CardHeader>
           <CardTitle>No Latest Appointment Available</CardTitle>
           <CardDescription>
@@ -44,9 +49,6 @@ export default function LatestItemCard({ latestItem }: LatestItemCardProps) {
       <CardContent>
         <div className="space-y-4">
           <>
-            <p>
-              <strong>Appointment ID:</strong> {latestItem._id}
-            </p>
             <p>
               <strong>Patient:</strong> {latestItem.patient.fullName}
             </p>
