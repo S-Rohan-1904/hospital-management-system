@@ -243,8 +243,11 @@ const getAllBedOccupation = asyncHandler(async (req, res) => {
     return res.status(403).json(new ApiResponse(403, {}, "Forbidden request"));
   }
 
-  const getAdmittedPatients = await AdmittedPatient.find({ hospitalId: req.user.hospitalId })
-    .populate("bedHistory.bed")
+  const getAdmittedPatients = await AdmittedPatient.find({ 
+    hospitalId: req.user.hospitalId,
+    status: "admitted",
+   })
+   .populate("bedHistory.bed")
     .populate("patientId", "email fullName"); // Populate email and fullName of the patient
 
     const flattenedResponse = await Promise.all(
@@ -524,18 +527,28 @@ const getPendingPayments = asyncHandler(async (req, res) => {
 
   const patient = await User.findOne({email});
 
+  if (!patient) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, {}, "Patient not found"))
+  }
+
   const paymentPendingDischargePatient = await AdmittedPatient.find({
     patientId: patient._id,
     status: "payment pending",
   }).populate("paymentId");
+
+  if (paymentPendingDischargePatient.length===0) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, {}, "Admitted Patient not found"))
+  }
 
   const extractedData = paymentPendingDischargePatient.map(item => ({
     _id: item._id,
     totalAmount: item.totalAmount,
     order_id: item.paymentId.order_id,
   }));
-  
-  console.log(extractedData);
 
   return res
     .status(200)
