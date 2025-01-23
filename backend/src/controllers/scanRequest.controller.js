@@ -168,7 +168,7 @@ const getScanRequestsByRole = async (userId, role) => {
   } else if (role === "scanCentre") {
     matchCondition.scanCentre = userId;
   } else {
-    throw new Error("Invalid role");
+    console.error("Invalid role");
   }
 
   const scanRequests = await ScanRequest.aggregate([
