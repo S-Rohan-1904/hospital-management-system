@@ -1,0 +1,11 @@
+{
+  "builds": [
+    {
+      "src": "next.config.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "env": {
+    "NEXT_IGNORE_ESLINT": "true"
+  }
+}

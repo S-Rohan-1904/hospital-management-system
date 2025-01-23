@@ -3,13 +3,11 @@ import React, { useRef, useState } from "react";
 import { AiFillLike } from "react-icons/ai";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { IoMdSend, IoMdCloseCircle } from "react-icons/io";
-import Picker from "emoji-picker-react";
 import { useAuthContext } from "@/context/AuthContext";
 
 function ChatFooter({ roomId }: { roomId: string }) {
   const [message, setMessage] = useState<string>("");
   const { socket } = useSocket();
-  const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const inputRef = useRef<any | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const { currentUser } = useAuthContext();
@@ -17,7 +15,6 @@ function ChatFooter({ roomId }: { roomId: string }) {
   const onEmojiPick = (emojiObj: any) => {
     setMessage((prevInput) => prevInput + emojiObj.emoji);
     inputRef.current.focus();
-    setShowEmojiPicker(false);
   };
 
   const handleSendMessage = (e: any, message: string) => {
@@ -75,20 +72,7 @@ function ChatFooter({ roomId }: { roomId: string }) {
       )}
       <div className="basis-[8%] border-t p-3 flex items-center gap-4 bg-card">
         <div className="relative w-full">
-          <div className="absolute bottom-12 right-0">
-            {showEmojiPicker && (
-              <Picker
-                onEmojiClick={onEmojiPick}
-                previewConfig={{ showPreview: false }}
-                className="z-50 shadow-md bg-popover"
-              />
-            )}
-          </div>
-          <BsEmojiSmileFill
-            size={24}
-            className="cursor-pointer absolute top-[6px] right-3 text-muted hover:text-primary"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          />
+          <div className="absolute bottom-12 right-0"></div>
           <form onSubmit={(e) => handleSendMessage(e, message)}>
             <input
               ref={inputRef}
@@ -98,7 +82,7 @@ function ChatFooter({ roomId }: { roomId: string }) {
               placeholder="Type a message..."
               onKeyUp={handleTyping}
               onChange={(e) => {
-                setMessage(e.target.value), setShowEmojiPicker(false);
+                setMessage(e.target.value);
               }}
             />
           </form>
